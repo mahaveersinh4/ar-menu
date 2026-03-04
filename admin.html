@@ -3,199 +3,227 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AR Menu — Admin Panel</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<title>AR Menu — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<!-- MindAR compiler for generating .mind file -->
-<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js"></script>
 <style>
 :root {
-  --ink: #0f0e0c;
-  --gold: #b8860b;
-  --gold2: #daa520;
-  --rust: #8b3a2a;
-  --muted: #7a7165;
-  --line: rgba(184,134,11,0.2);
+  --bg: #0a0908;
+  --surface: #141210;
+  --card: #1c1916;
+  --gold: #c9922a;
+  --gold2: #e8b84b;
+  --text: #f0ece4;
+  --muted: #6b6358;
+  --border: rgba(201,146,42,0.15);
+  --green: #4caf7d;
+  --red: #e05555;
 }
 * { margin:0; padding:0; box-sizing:border-box; }
-body { font-family:'Jost',sans-serif; background:#f5f1ea; color:var(--ink); min-height:100vh; }
+body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
 
-.header { background:var(--ink); padding:1rem 1.5rem; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:10; }
-.header-title { font-family:'Cormorant Garamond',serif; font-size:1.4rem; color:var(--gold2); }
-.header-sub { font-size:0.62rem; color:rgba(255,255,255,0.35); letter-spacing:0.15em; text-transform:uppercase; }
+.header {
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  padding:1rem 1.5rem;
+  display:flex; align-items:center; justify-content:space-between;
+  position:sticky; top:0; z-index:20;
+}
+.logo { font-family:'Playfair Display',serif; font-size:1.3rem; color:var(--gold2); }
+.logo span { font-size:0.6rem; display:block; color:var(--muted); letter-spacing:0.2em; text-transform:uppercase; margin-top:-2px; }
 
-.container { max-width:640px; margin:0 auto; padding:1.5rem; display:flex; flex-direction:column; gap:1.5rem; }
+.wrap { max-width:620px; margin:0 auto; padding:1.5rem; display:flex; flex-direction:column; gap:1.4rem; }
 
-.sec-label { font-size:0.62rem; letter-spacing:0.22em; text-transform:uppercase; color:var(--muted); margin-bottom:0.7rem; display:flex; align-items:center; gap:0.5rem; }
-.sec-label::after { content:''; flex:1; height:1px; background:var(--line); }
+/* Section */
+.section-title {
+  font-size:0.6rem; letter-spacing:0.25em; text-transform:uppercase;
+  color:var(--muted); margin-bottom:0.8rem;
+  display:flex; align-items:center; gap:0.6rem;
+}
+.section-title::after { content:''; flex:1; height:1px; background:var(--border); }
 
-.card { background:#fff; border-radius:18px; padding:1.4rem; box-shadow:0 2px 16px rgba(0,0,0,0.07); border:1px solid rgba(0,0,0,0.06); }
+/* Card */
+.card {
+  background:var(--card); border:1px solid var(--border);
+  border-radius:16px; padding:1.3rem;
+}
 
-.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.8rem; }
-.field { display:flex; flex-direction:column; gap:0.3rem; }
+/* Config */
+.config-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.8rem; }
+.field { display:flex; flex-direction:column; gap:0.35rem; }
 .field.full { grid-column:1/-1; }
-.field label { font-size:0.68rem; color:var(--muted); font-weight:500; letter-spacing:0.06em; }
-.field input { border:1.5px solid rgba(0,0,0,0.1); border-radius:10px; padding:0.65rem 0.9rem; font-family:'Jost',sans-serif; font-size:0.88rem; background:#fafaf8; color:var(--ink); outline:none; transition:border-color 0.2s; }
+.field label { font-size:0.65rem; color:var(--muted); letter-spacing:0.08em; text-transform:uppercase; }
+.field input {
+  background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08);
+  border-radius:10px; padding:0.65rem 0.9rem;
+  font-family:'DM Sans',sans-serif; font-size:0.85rem; color:var(--text);
+  outline:none; transition:border-color 0.2s;
+}
 .field input:focus { border-color:var(--gold); }
-.field input.mono { font-family:monospace; font-size:0.78rem; }
+.field input.mono { font-family:monospace; font-size:0.75rem; letter-spacing:0.03em; }
 
-.config-card { background:rgba(184,134,11,0.05); border:1.5px solid var(--line); border-radius:14px; padding:1.2rem; }
-.config-saved { display:flex; align-items:center; gap:0.5rem; font-size:0.82rem; color:#2e7d32; font-weight:500; background:rgba(46,125,50,0.08); border:1px solid rgba(46,125,50,0.2); border-radius:8px; padding:0.5rem 0.8rem; margin-bottom:0.8rem; }
-.config-btn { background:linear-gradient(135deg,var(--gold),#8b6914); color:#fff; border:none; border-radius:10px; padding:0.65rem 1.2rem; font-family:'Jost',sans-serif; font-size:0.82rem; cursor:pointer; margin-top:0.8rem; transition:opacity 0.2s; width:100%; }
-.config-btn:hover { opacity:0.9; }
-.config-hint { font-size:0.68rem; color:var(--muted); margin-top:0.6rem; line-height:1.6; }
-.config-hint a { color:var(--gold); }
-.config-hint code { background:#f0ece4; padding:0.1rem 0.4rem; border-radius:4px; font-size:0.7rem; }
+.status-pill {
+  display:inline-flex; align-items:center; gap:0.4rem;
+  font-size:0.72rem; padding:0.35rem 0.8rem; border-radius:50px;
+  margin-bottom:0.8rem;
+}
+.status-pill.ok { background:rgba(76,175,125,0.1); border:1px solid rgba(76,175,125,0.25); color:var(--green); }
+.status-pill.warn { background:rgba(224,85,85,0.1); border:1px solid rgba(224,85,85,0.25); color:var(--red); }
 
-.upload-box { border:2px dashed rgba(184,134,11,0.35); border-radius:14px; padding:1.5rem; text-align:center; cursor:pointer; transition:all 0.2s; background:rgba(184,134,11,0.02); position:relative; overflow:hidden; min-height:110px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0.4rem; }
-.upload-box:hover { border-color:var(--gold); background:rgba(184,134,11,0.06); }
-.upload-box input[type=file] { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
-.u-icon { font-size:2rem; }
-.u-text { font-size:0.75rem; color:var(--muted); }
-.u-hint { font-size:0.65rem; color:rgba(122,113,101,0.5); }
-.upload-preview { width:100%; max-height:150px; object-fit:cover; border-radius:10px; display:none; }
+.btn {
+  border:none; border-radius:10px; padding:0.7rem 1.3rem;
+  font-family:'DM Sans',sans-serif; font-size:0.85rem; font-weight:500;
+  cursor:pointer; transition:all 0.2s; display:inline-flex; align-items:center; gap:0.4rem;
+}
+.btn-gold { background:linear-gradient(135deg,var(--gold),#a07020); color:#fff; }
+.btn-gold:hover { opacity:0.9; transform:translateY(-1px); }
+.btn-full { width:100%; justify-content:center; margin-top:0.8rem; }
+.btn:disabled { opacity:0.4; cursor:not-allowed; transform:none !important; }
 
-.target-status { display:flex; align-items:center; gap:1rem; padding:0.8rem 1rem; background:rgba(46,125,50,0.06); border-radius:12px; border:1px solid rgba(46,125,50,0.2); margin-bottom:1rem; }
-.target-thumb { width:56px; height:56px; border-radius:8px; object-fit:cover; flex-shrink:0; }
-.target-info .t-name { font-size:0.88rem; font-weight:500; color:#2e7d32; }
-.target-info .t-hint { font-size:0.68rem; color:var(--muted); margin-top:0.2rem; }
-.reset-btn { background:none; border:none; font-size:1.2rem; cursor:pointer; color:var(--muted); margin-left:auto; padding:0.3rem; }
+/* Upload box */
+.upload-box {
+  border:1.5px dashed rgba(201,146,42,0.3); border-radius:12px;
+  padding:1.3rem; text-align:center; cursor:pointer;
+  transition:all 0.2s; position:relative; overflow:hidden;
+  min-height:100px; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:0.4rem;
+  background:rgba(201,146,42,0.02);
+}
+.upload-box:hover { border-color:var(--gold); background:rgba(201,146,42,0.05); }
+.upload-box input { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+.upload-box .ub-icon { font-size:1.8rem; }
+.upload-box .ub-text { font-size:0.75rem; color:var(--muted); }
+.upload-preview { max-width:100%; max-height:140px; border-radius:8px; display:none; object-fit:cover; }
 
-/* Progress bar inside card */
-.compile-progress { margin-top:0.8rem; display:none; }
-.cp-label { font-size:0.72rem; color:var(--muted); margin-bottom:0.4rem; }
-.cp-bar-wrap { height:6px; background:rgba(0,0,0,0.08); border-radius:6px; overflow:hidden; }
-.cp-bar { height:100%; background:linear-gradient(90deg,var(--gold),#daa520); border-radius:6px; transition:width 0.3s; width:0%; }
+/* Dish form grid */
+.dish-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.8rem; }
 
-.submit-btn { width:100%; background:linear-gradient(135deg,var(--gold),#8b6914); color:#fff; border:none; border-radius:12px; padding:0.9rem; font-family:'Jost',sans-serif; font-size:0.95rem; font-weight:500; cursor:pointer; margin-top:0.6rem; transition:opacity 0.2s, transform 0.15s; display:flex; align-items:center; justify-content:center; gap:0.5rem; }
-.submit-btn:hover { opacity:0.9; transform:translateY(-1px); }
-.submit-btn:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+/* Dish list */
+.dish-list { display:flex; flex-direction:column; gap:0.7rem; }
+.dish-item {
+  background:rgba(255,255,255,0.03); border:1px solid var(--border);
+  border-radius:12px; display:flex; align-items:stretch; overflow:hidden;
+}
+.dish-item-img { width:80px; flex-shrink:0; object-fit:cover; background:#1a1512; }
+.dish-item-img-ph { width:80px; flex-shrink:0; background:#1a1512; display:flex; align-items:center; justify-content:center; font-size:2rem; }
+.dish-item-info { flex:1; padding:0.75rem 0.9rem; min-width:0; }
+.dish-item-name { font-family:'Playfair Display',serif; font-size:1rem; font-weight:700; }
+.dish-item-price { font-size:0.75rem; color:var(--gold); margin-top:0.1rem; }
+.dish-item-desc { font-size:0.68rem; color:var(--muted); margin-top:0.15rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.dish-item-btns { display:flex; flex-direction:column; gap:0.35rem; padding:0.75rem 0.6rem; justify-content:center; }
+.di-btn { background:transparent; border:1px solid; border-radius:7px; padding:0.28rem 0.6rem; font-size:0.65rem; cursor:pointer; font-family:'DM Sans',sans-serif; white-space:nowrap; transition:all 0.2s; }
+.di-btn.qr { color:var(--gold); border-color:rgba(201,146,42,0.35); }
+.di-btn.qr:hover { background:rgba(201,146,42,0.1); }
+.di-btn.del { color:var(--red); border-color:rgba(224,85,85,0.3); }
+.di-btn.del:hover { background:rgba(224,85,85,0.08); }
+.empty { text-align:center; padding:2rem; color:var(--muted); font-size:0.82rem; }
 
-.dish-grid { display:flex; flex-direction:column; gap:0.8rem; }
-.dish-row { background:#fff; border-radius:14px; overflow:hidden; display:flex; align-items:stretch; box-shadow:0 1px 8px rgba(0,0,0,0.06); border:1px solid rgba(0,0,0,0.05); }
-.dish-row-img { width:88px; flex-shrink:0; object-fit:cover; background:#f0ece4; }
-.dish-row-img-ph { width:88px; flex-shrink:0; background:#f0ece4; display:flex; align-items:center; justify-content:center; font-size:2.2rem; }
-.dish-row-info { flex:1; padding:0.85rem 1rem; min-width:0; }
-.dish-row-name { font-family:'Cormorant Garamond',serif; font-size:1.1rem; font-weight:600; }
-.dish-row-price { font-size:0.8rem; color:var(--gold); margin-top:0.1rem; }
-.dish-row-desc { font-size:0.7rem; color:var(--muted); margin-top:0.2rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.dish-row-btns { display:flex; flex-direction:column; gap:0.4rem; padding:0.8rem 0.6rem; justify-content:center; }
-.row-btn { border:1px solid; border-radius:8px; padding:0.32rem 0.65rem; font-size:0.68rem; cursor:pointer; font-family:'Jost',sans-serif; white-space:nowrap; transition:all 0.2s; background:transparent; font-weight:500; }
-.row-btn.qr { color:var(--gold); border-color:rgba(184,134,11,0.4); }
-.row-btn.qr:hover { background:rgba(184,134,11,0.1); }
-.row-btn.del { color:var(--rust); border-color:rgba(139,58,42,0.3); }
-.row-btn.del:hover { background:rgba(139,58,42,0.08); }
-.empty-msg { text-align:center; padding:2.5rem; color:var(--muted); font-size:0.85rem; }
-
-.info-note { background:rgba(184,134,11,0.07); border:1px solid var(--line); border-radius:12px; padding:1rem 1.2rem; font-size:0.78rem; color:var(--ink); line-height:1.7; }
-.info-note strong { color:var(--gold); }
-.info-note ol { padding-left:1.2rem; margin-top:0.4rem; }
-.info-note li { margin-bottom:0.3rem; }
-
-#qr-modal { position:fixed; inset:0; z-index:200; background:rgba(0,0,0,0.75); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; padding:1.5rem; }
+/* QR Modal */
+#qr-modal {
+  position:fixed; inset:0; z-index:200;
+  background:rgba(0,0,0,0.85); backdrop-filter:blur(10px);
+  display:none; align-items:center; justify-content:center; padding:1.5rem;
+}
 #qr-modal.open { display:flex; }
-.qr-box { background:#fff; border-radius:22px; padding:2rem; max-width:300px; width:100%; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.4); }
-.qr-dish-name { font-family:'Cormorant Garamond',serif; font-size:1.4rem; font-weight:700; }
-.qr-dish-price { font-size:0.78rem; color:var(--muted); margin-bottom:1.2rem; margin-top:0.2rem; }
-#qr-render { display:flex; justify-content:center; margin-bottom:1rem; }
-#qr-render canvas { border-radius:10px; border:6px solid white; box-shadow:0 4px 20px rgba(0,0,0,0.12); }
-.qr-note { font-size:0.65rem; color:var(--muted); margin-bottom:1.2rem; background:#f5f1ea; padding:0.5rem 0.8rem; border-radius:8px; line-height:1.5; }
-.qr-btns { display:flex; gap:0.7rem; }
-.qr-btns button { flex:1; padding:0.7rem; border-radius:10px; border:none; font-family:'Jost',sans-serif; font-size:0.82rem; cursor:pointer; font-weight:500; }
-.qr-dl { background:var(--gold); color:#fff; }
-.qr-cl { background:#f0ece4; color:var(--ink); }
+.qr-card {
+  background:#1c1916; border:1px solid var(--border);
+  border-radius:20px; padding:2rem; max-width:280px; width:100%;
+  text-align:center;
+}
+.qr-name { font-family:'Playfair Display',serif; font-size:1.3rem; color:var(--gold2); }
+.qr-price { font-size:0.75rem; color:var(--muted); margin:0.2rem 0 1.2rem; }
+#qr-wrap { display:flex; justify-content:center; margin-bottom:1rem; }
+#qr-wrap canvas { border-radius:8px; border:8px solid #fff; }
+.qr-hint { font-size:0.62rem; color:var(--muted); margin-bottom:1.2rem; line-height:1.5; }
+.qr-btns { display:flex; gap:0.6rem; }
+.qr-btns button { flex:1; padding:0.65rem; border-radius:9px; border:none; font-family:'DM Sans',sans-serif; font-size:0.8rem; cursor:pointer; font-weight:500; }
+.qb-dl { background:var(--gold); color:#fff; }
+.qb-cl { background:rgba(255,255,255,0.07); color:var(--text); }
 
-#processing { position:fixed; inset:0; z-index:300; background:rgba(15,14,12,0.88); display:none; align-items:center; justify-content:center; flex-direction:column; gap:1rem; padding:2rem; }
-#processing.show { display:flex; }
-.proc-spinner { width:52px; height:52px; border:3px solid rgba(218,165,32,0.2); border-top-color:#daa520; border-radius:50%; animation:spin 0.8s linear infinite; }
+/* Processing */
+#proc {
+  position:fixed; inset:0; z-index:300;
+  background:rgba(10,9,8,0.92);
+  display:none; flex-direction:column; align-items:center; justify-content:center;
+  gap:1rem; padding:2rem; text-align:center;
+}
+#proc.show { display:flex; }
+.proc-ring { width:50px; height:50px; border-radius:50%; border:2.5px solid rgba(201,146,42,0.15); border-top-color:var(--gold); animation:spin 0.9s linear infinite; }
 @keyframes spin { to{transform:rotate(360deg)} }
-.proc-text { color:#daa520; font-size:0.9rem; letter-spacing:0.08em; text-align:center; max-width:280px; line-height:1.6; }
-.proc-bar-wrap { width:240px; height:6px; background:rgba(255,255,255,0.1); border-radius:6px; overflow:hidden; }
-.proc-bar { height:100%; background:linear-gradient(90deg,#b8860b,#daa520); border-radius:6px; transition:width 0.4s; width:0%; }
+.proc-msg { color:var(--gold2); font-size:0.88rem; max-width:260px; line-height:1.6; }
+.proc-bar-wrap { width:220px; height:5px; background:rgba(255,255,255,0.08); border-radius:5px; overflow:hidden; }
+.proc-bar { height:100%; background:linear-gradient(90deg,var(--gold),var(--gold2)); border-radius:5px; transition:width 0.35s; width:0%; }
 
-#toast { position:fixed; bottom:1.5rem; left:50%; transform:translateX(-50%); background:rgba(15,14,12,0.92); border:1px solid rgba(184,134,11,0.4); color:#faf7f2; padding:0.6rem 1.4rem; border-radius:50px; font-size:0.8rem; z-index:999; opacity:0; transition:opacity 0.3s; pointer-events:none; white-space:nowrap; }
+/* Toast */
+#toast {
+  position:fixed; bottom:1.5rem; left:50%; transform:translateX(-50%);
+  background:#1c1916; border:1px solid var(--border);
+  color:var(--text); padding:0.6rem 1.3rem; border-radius:50px;
+  font-size:0.78rem; z-index:999; opacity:0; transition:opacity 0.3s;
+  pointer-events:none; white-space:nowrap;
+}
 #toast.show { opacity:1; }
+
+.info-box {
+  background:rgba(201,146,42,0.06); border:1px solid var(--border);
+  border-radius:12px; padding:1rem 1.1rem; font-size:0.75rem; line-height:1.7; color:rgba(240,236,228,0.7);
+}
+.info-box strong { color:var(--gold2); }
+.info-box ol { padding-left:1.2rem; margin-top:0.4rem; }
+.info-box li { margin-bottom:0.2rem; }
 </style>
 </head>
 <body>
 
 <div class="header">
-  <div>
-    <div class="header-title">✦ AR Menu Admin</div>
-    <div class="header-sub">Restaurant Owner Panel</div>
-  </div>
+  <div class="logo">✦ AR Menu <span>Admin Panel</span></div>
 </div>
 
-<div class="container">
+<div class="wrap">
 
-  <div class="info-note">
-    <strong>Workflow:</strong>
+  <div class="info-box">
+    <strong>Kaise use karo:</strong>
     <ol>
-      <li>GitHub token set karo <strong>(sirf ek baar)</strong></li>
-      <li>Restaurant logo upload karo → <strong>.mind file auto ban jaati hai</strong></li>
-      <li>Dish add karo → QR generate ho</li>
-      <li>Customer QR scan kare → logo pe point kare → <strong>dish AR mein float kare!</strong> ✨</li>
+      <li>GitHub token ek baar set karo</li>
+      <li>Dish add karo — naam, price, photo</li>
+      <li>QR generate karo → print karo → restaurant ko do</li>
+      <li>Customer QR scan kare → <strong>dish QR ke upar AR mein dikhe!</strong></li>
     </ol>
   </div>
 
-  <!-- STEP 0: GITHUB CONFIG -->
+  <!-- GITHUB CONFIG -->
   <div>
-    <div class="sec-label">Step 0 — GitHub Setup (Sirf Ek Baar)</div>
+    <div class="section-title">GitHub Setup — Sirf Ek Baar</div>
     <div class="card">
-      <div id="config-saved-msg" class="config-saved" style="display:none;">✅ GitHub config save hai!</div>
-      <div class="config-card">
-        <div class="form-grid">
-          <div class="field">
-            <label>GitHub Username</label>
-            <input type="text" id="gh-user" placeholder="mahaveersinh4" value="mahaveersinh4">
-          </div>
-          <div class="field">
-            <label>Repository Name</label>
-            <input type="text" id="gh-repo" placeholder="ar-menu" value="ar-menu">
-          </div>
-          <div class="field full">
-            <label>GitHub Personal Access Token</label>
-            <input type="text" id="gh-token" class="mono" placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxx">
-          </div>
+      <div id="cfg-ok" class="status-pill ok" style="display:none">✓ GitHub connected</div>
+      <div id="cfg-warn" class="status-pill warn">⚠ Token set nahi hai</div>
+      <div class="config-grid">
+        <div class="field">
+          <label>Username</label>
+          <input type="text" id="gh-user" value="mahaveersinh4">
         </div>
-        <button class="config-btn" onclick="saveConfig()">💾 Config Save Karo</button>
-        <div class="config-hint">
-          Token banao:
-          <a href="https://github.com/settings/tokens/new" target="_blank">github.com/settings/tokens/new</a>
-          → Note: <code>ar-menu</code> → Expiration: <code>No expiration</code> → <code>repo</code> ✅ → Generate
+        <div class="field">
+          <label>Repo Name</label>
+          <input type="text" id="gh-repo" value="ar-menu">
         </div>
+        <div class="field full">
+          <label>Personal Access Token</label>
+          <input type="text" id="gh-token" class="mono" placeholder="ghp_xxxxxxxxxxxx">
+        </div>
+      </div>
+      <button class="btn btn-gold btn-full" onclick="saveConfig()">💾 Save Config</button>
+      <div style="font-size:0.65rem;color:var(--muted);margin-top:0.6rem;line-height:1.6;">
+        Token banao: <a href="https://github.com/settings/tokens/new" target="_blank" style="color:var(--gold)">github.com/settings/tokens/new</a>
+        → Note: ar-menu → No expiration → <code style="background:rgba(255,255,255,0.07);padding:0 4px;border-radius:4px">repo</code> tick → Generate
       </div>
     </div>
   </div>
 
-  <!-- STEP 1: TARGET IMAGE -->
+  <!-- ADD DISH -->
   <div>
-    <div class="sec-label">Step 1 — Restaurant Logo / Menu Card</div>
+    <div class="section-title">Dish Add Karo</div>
     <div class="card">
-      <div id="target-set" style="display:none">
-        <div class="target-status">
-          <img id="target-thumb" class="target-thumb" src="" alt="">
-          <div class="target-info">
-            <div class="t-name">✅ Logo set hai</div>
-            <div class="t-hint">.mind file GitHub pe save hai</div>
-          </div>
-          <button class="reset-btn" onclick="resetTarget()">×</button>
-        </div>
-      </div>
-      <div class="upload-box" id="target-box">
-        <input type="file" id="target-file" accept="image/*" onchange="uploadTarget(this)">
-        <div class="u-icon">🖼️</div>
-        <div class="u-text"><strong>Logo / Menu Card Upload Karo</strong></div>
-        <div class="u-hint">Clear image use karo — better tracking hogi</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- STEP 2: ADD DISH -->
-  <div>
-    <div class="sec-label">Step 2 — Dish Add Karo</div>
-    <div class="card">
-      <div class="form-grid">
+      <div class="dish-grid">
         <div class="field">
           <label>Dish Name *</label>
           <input type="text" id="f-name" placeholder="Butter Chicken">
@@ -205,28 +233,28 @@ body { font-family:'Jost',sans-serif; background:#f5f1ea; color:var(--ink); min-
           <input type="text" id="f-price" placeholder="₹320">
         </div>
         <div class="field full">
-          <label>Description</label>
+          <label>Description (optional)</label>
           <input type="text" id="f-desc" placeholder="Creamy tomato curry...">
         </div>
         <div class="field full">
           <label>Dish Photo *</label>
-          <div class="upload-box" id="dish-box">
-            <input type="file" id="f-img" accept="image/*" onchange="previewDish(this)">
-            <img class="upload-preview" id="dish-prev" src="" alt="">
-            <div class="u-icon" id="dish-icon">📷</div>
-            <div class="u-text" id="dish-txt">Dish ki photo upload karo</div>
+          <div class="upload-box" id="dish-upload">
+            <input type="file" id="f-img" accept="image/*" onchange="previewImg(this)">
+            <img class="upload-preview" id="img-prev" src="" alt="">
+            <div class="ub-icon" id="ub-icon">📷</div>
+            <div class="ub-text" id="ub-text">Tap karo photo select karne ke liye</div>
           </div>
         </div>
       </div>
-      <button class="submit-btn" id="add-btn" onclick="addDish()">🔲 Dish Add Karo & QR Generate Karo</button>
+      <button class="btn btn-gold btn-full" id="add-btn" onclick="addDish()">🔲 Dish Add Karo & QR Generate Karo</button>
     </div>
   </div>
 
   <!-- DISH LIST -->
   <div>
-    <div class="sec-label">Saved Dishes</div>
-    <div class="dish-grid" id="dish-list">
-      <div class="empty-msg">Koi dish nahi — upar se add karo!</div>
+    <div class="section-title">Saved Dishes</div>
+    <div class="dish-list" id="dish-list">
+      <div class="empty">Koi dish nahi — upar se add karo!</div>
     </div>
   </div>
 
@@ -234,395 +262,302 @@ body { font-family:'Jost',sans-serif; background:#f5f1ea; color:var(--ink); min-
 
 <!-- QR MODAL -->
 <div id="qr-modal">
-  <div class="qr-box">
-    <div class="qr-dish-name" id="qm-name"></div>
-    <div class="qr-dish-price" id="qm-price"></div>
-    <div id="qr-render"></div>
-    <div class="qr-note">📱 Customer yeh QR scan kare → camera khule → logo pe point kare → dish AR mein dikhe!</div>
+  <div class="qr-card">
+    <div class="qr-name" id="qm-name"></div>
+    <div class="qr-price" id="qm-price"></div>
+    <div id="qr-wrap"></div>
+    <div class="qr-hint">📱 Customer phone se yeh QR scan kare → camera QR ke upar point kare → dish AR mein float karegi!</div>
     <div class="qr-btns">
-      <button class="qr-dl" onclick="downloadQR()">⬇ Download QR</button>
-      <button class="qr-cl" onclick="closeQR()">Close</button>
+      <button class="qb-dl" onclick="dlQR()">⬇ Download</button>
+      <button class="qb-cl" onclick="closeQR()">Close</button>
     </div>
   </div>
 </div>
 
 <!-- PROCESSING -->
-<div id="processing">
-  <div class="proc-spinner"></div>
-  <div class="proc-text" id="proc-text">Processing...</div>
+<div id="proc">
+  <div class="proc-ring"></div>
+  <div class="proc-msg" id="proc-msg">Processing...</div>
   <div class="proc-bar-wrap"><div class="proc-bar" id="proc-bar"></div></div>
 </div>
 
 <div id="toast"></div>
 
 <script>
-// ════════════════════
+// ════════════════════════════════
 // STATE
-// ════════════════════
-let CONFIG = JSON.parse(localStorage.getItem('ar_config_v5') || '{}');
-let dishes = JSON.parse(localStorage.getItem('ar_dishes_v5') || '[]');
-let targetData = JSON.parse(localStorage.getItem('ar_target_v5') || 'null');
+// ════════════════════════════════
+let CFG = JSON.parse(localStorage.getItem('armenu_cfg') || '{}');
+let DISHES = JSON.parse(localStorage.getItem('armenu_dishes') || '[]');
 let currentQRDish = null;
 
-function ghRawURL(filename) {
-  return `https://raw.githubusercontent.com/${CONFIG.user}/${CONFIG.repo}/main/ar-images/${filename}`;
-}
-function arPageURL() {
-  return `https://${CONFIG.user}.github.io/${CONFIG.repo}/ar.html`;
-}
+// AR page URL
+const AR_URL = () => `https://${CFG.user}.github.io/${CFG.repo}/ar.html`;
+// GitHub API
+const GH_API = (file) => `https://api.github.com/repos/${CFG.user}/${CFG.repo}/contents/images/${file}`;
 
-// ════════════════════
+// ════════════════════════════════
 // CONFIG
-// ════════════════════
+// ════════════════════════════════
 function saveConfig() {
   const user = document.getElementById('gh-user').value.trim();
   const repo = document.getElementById('gh-repo').value.trim();
   const token = document.getElementById('gh-token').value.trim();
-  if (!user || !repo || !token) { toast('⚠️ Teeno fields bharo'); return; }
-  CONFIG = { user, repo, token };
-  localStorage.setItem('ar_config_v5', JSON.stringify(CONFIG));
-  document.getElementById('config-saved-msg').style.display = 'flex';
-  toast('✅ Config save ho gaya!');
+  if (!user || !repo || !token) { toast('⚠ Teeno fields bharo'); return; }
+  CFG = { user, repo, token };
+  localStorage.setItem('armenu_cfg', JSON.stringify(CFG));
+  showCfgStatus(true);
+  toast('✅ Config saved!');
 }
 
-// ════════════════════
-// GITHUB UPLOAD
-// ════════════════════
-async function uploadToGitHub(filename, dataOrBuffer, isBinary) {
-  const apiURL = `https://api.github.com/repos/${CONFIG.user}/${CONFIG.repo}/contents/ar-images/${filename}`;
-
-  let base64;
-  if (isBinary) {
-    // ArrayBuffer → base64
-    const bytes = new Uint8Array(dataOrBuffer);
-    let bin = '';
-    for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
-    base64 = btoa(bin);
-  } else {
-    // data URL → base64
-    base64 = dataOrBuffer.split(',')[1];
-  }
-
-  // Check existing SHA
-  let sha = null;
-  try {
-    const res = await fetch(apiURL, {
-      headers: { 'Authorization': `token ${CONFIG.token}`, 'Accept': 'application/vnd.github.v3+json' }
-    });
-    if (res.ok) { const j = await res.json(); sha = j.sha; }
-  } catch(e) {}
-
-  const body = { message: `AR Menu: ${filename}`, content: base64, ...(sha ? { sha } : {}) };
-
-  const res = await fetch(apiURL, {
-    method: 'PUT',
-    headers: {
-      'Authorization': `token ${CONFIG.token}`,
-      'Accept': 'application/vnd.github.v3+json',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(body)
-  });
-
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.message || 'Upload failed');
-  }
-  return ghRawURL(filename);
+function showCfgStatus(ok) {
+  document.getElementById('cfg-ok').style.display = ok ? 'inline-flex' : 'none';
+  document.getElementById('cfg-warn').style.display = ok ? 'none' : 'inline-flex';
 }
 
-// ════════════════════
-// COMPRESS IMAGE
-// ════════════════════
-function compressImage(dataURL, maxSize, quality) {
-  return new Promise(resolve => {
+// ════════════════════════════════
+// IMAGE COMPRESS
+// ════════════════════════════════
+function compressImg(dataURL, maxPx, quality) {
+  return new Promise(res => {
     const img = new Image();
     img.onload = () => {
-      const canvas = document.createElement('canvas');
       let w = img.width, h = img.height;
-      if (w > maxSize || h > maxSize) {
-        if (w > h) { h = Math.round(h * maxSize / w); w = maxSize; }
-        else { w = Math.round(w * maxSize / h); h = maxSize; }
+      if (w > maxPx || h > maxPx) {
+        if (w > h) { h = Math.round(h * maxPx / w); w = maxPx; }
+        else { w = Math.round(w * maxPx / h); h = maxPx; }
       }
-      canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      resolve(canvas.toDataURL('image/jpeg', quality));
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      res(c.toDataURL('image/jpeg', quality));
     };
     img.src = dataURL;
   });
 }
 
-// ════════════════════
-// COMPILE .MIND FILE
-// — Done in admin panel so phone doesn't need to do it!
-// ════════════════════
-async function compileMindFile(imgDataURL) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = async () => {
-      try {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        canvas.getContext('2d').drawImage(img, 0, 0);
+// ════════════════════════════════
+// GITHUB UPLOAD
+// ════════════════════════════════
+async function ghUpload(filename, dataURL) {
+  const base64 = dataURL.split(',')[1];
+  const url = GH_API(filename);
 
-        setProc('Target image compile ho rahi hai...', 30);
+  // Get SHA if exists
+  let sha = null;
+  try {
+    const r = await fetch(url, { headers: { 'Authorization': `token ${CFG.token}`, 'Accept': 'application/vnd.github.v3+json' } });
+    if (r.ok) { sha = (await r.json()).sha; }
+  } catch(e) {}
 
-        const compiler = new MINDAR.IMAGE.Compiler();
-        await compiler.compileImageTargets([canvas], (progress) => {
-          setProc(`Compile: ${Math.round(progress * 100)}%`, 30 + Math.round(progress * 50));
-        });
+  const body = { message: `add ${filename}`, content: base64 };
+  if (sha) body.sha = sha;
 
-        const buffer = await compiler.exportData();
-        resolve(buffer);
-      } catch(e) { reject(e); }
-    };
-    img.onerror = () => reject(new Error('Image load failed'));
-    img.src = imgDataURL;
+  const r = await fetch(url, {
+    method: 'PUT',
+    headers: { 'Authorization': `token ${CFG.token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
   });
+
+  if (!r.ok) {
+    const e = await r.json();
+    throw new Error(e.message || 'Upload failed');
+  }
+
+  // Return raw URL
+  return `https://raw.githubusercontent.com/${CFG.user}/${CFG.repo}/main/images/${filename}`;
 }
 
-// ════════════════════
-// UPLOAD TARGET IMAGE
-// ════════════════════
-function uploadTarget(input) {
-  const file = input.files[0]; if (!file) return;
-  if (!CONFIG.token) { toast('⚠️ Pehle GitHub config save karo (Step 0)'); return; }
-
-  showProc('Image compress ho rahi hai...', 10);
-  const reader = new FileReader();
-  reader.onload = async e => {
-    try {
-      // 1. Compress image
-      const compressed = await compressImage(e.target.result, 800, 0.85);
-      setProc('Image GitHub pe upload ho rahi hai...', 20);
-
-      // 2. Upload original image to GitHub
-      const ts = Date.now();
-      const imgFilename = `target-${ts}.jpg`;
-      const imgURL = await uploadToGitHub(imgFilename, compressed, false);
-      setProc('Target image compile ho rahi hai... (30-60 sec)', 30);
-
-      // 3. Compile .mind file (THIS is the key fix!)
-      const mindBuffer = await compileMindFile(compressed);
-      setProc('.mind file GitHub pe upload ho rahi hai...', 85);
-
-      // 4. Upload .mind file to GitHub
-      const mindFilename = `target-${ts}.mind`;
-      const mindURL = await uploadToGitHub(mindFilename, mindBuffer, true);
-      setProc('Complete!', 100);
-
-      // 5. Save target data
-      targetData = { imgURL, mindURL, imgFilename, mindFilename };
-      localStorage.setItem('ar_target_v5', JSON.stringify(targetData));
-
-      document.getElementById('target-thumb').src = compressed;
-      document.getElementById('target-set').style.display = 'block';
-      document.getElementById('target-box').style.display = 'none';
-
-      hideProc();
-      toast('✅ Logo + .mind file GitHub pe save ho gayi!');
-    } catch(err) {
-      hideProc();
-      console.error(err);
-      toast('❌ Error: ' + err.message);
-    }
-  };
-  reader.readAsDataURL(file);
-}
-
-function resetTarget() {
-  targetData = null;
-  localStorage.removeItem('ar_target_v5');
-  document.getElementById('target-set').style.display = 'none';
-  document.getElementById('target-box').style.display = 'flex';
-  document.getElementById('target-file').value = '';
-}
-
-// ════════════════════
-// DISH PREVIEW
-// ════════════════════
-function previewDish(input) {
+// ════════════════════════════════
+// PREVIEW
+// ════════════════════════════════
+function previewImg(input) {
   const file = input.files[0]; if (!file) return;
   const reader = new FileReader();
   reader.onload = e => {
-    const prev = document.getElementById('dish-prev');
-    prev.src = e.target.result; prev.style.display = 'block';
-    document.getElementById('dish-icon').style.display = 'none';
-    document.getElementById('dish-txt').style.display = 'none';
+    const prev = document.getElementById('img-prev');
+    prev.src = e.target.result;
+    prev.style.display = 'block';
+    document.getElementById('ub-icon').style.display = 'none';
+    document.getElementById('ub-text').style.display = 'none';
   };
   reader.readAsDataURL(file);
 }
 
-// ════════════════════
+// ════════════════════════════════
 // ADD DISH
-// ════════════════════
+// ════════════════════════════════
 async function addDish() {
   const name = document.getElementById('f-name').value.trim();
   const price = document.getElementById('f-price').value.trim();
   const desc = document.getElementById('f-desc').value.trim();
-  const imgEl = document.getElementById('dish-prev');
-  const rawImg = imgEl.style.display !== 'none' ? imgEl.src : null;
+  const prev = document.getElementById('img-prev');
+  const rawImg = prev.style.display !== 'none' ? prev.src : null;
 
-  if (!name || !price) { toast('⚠️ Naam aur price daalo'); return; }
-  if (!rawImg) { toast('⚠️ Dish photo upload karo'); return; }
-  if (!targetData) { toast('⚠️ Pehle restaurant logo upload karo (Step 1)'); return; }
-  if (!CONFIG.token) { toast('⚠️ GitHub config save karo (Step 0)'); return; }
+  if (!name || !price) { toast('⚠ Naam aur price daalo'); return; }
+  if (!rawImg) { toast('⚠ Dish photo upload karo'); return; }
+  if (!CFG.token) { toast('⚠ Pehle GitHub config save karo'); return; }
 
   document.getElementById('add-btn').disabled = true;
-  showProc('Dish image compress ho rahi hai...', 20);
+  showProc('Image compress ho rahi hai...', 20);
 
   try {
-    const compressed = await compressImage(rawImg, 600, 0.8);
-    setProc('Dish GitHub pe upload ho rahi hai...', 50);
+    const compressed = await compressImg(rawImg, 600, 0.82);
+    setProc('GitHub pe upload ho rahi hai...', 55);
 
-    const filename = `dish-${Date.now()}.jpg`;
-    const dishURL = await uploadToGitHub(filename, compressed, false);
-    setProc('Complete!', 100);
+    const filename = `dish_${Date.now()}.jpg`;
+    const imgURL = await ghUpload(filename, compressed);
+    setProc('Done!', 100);
 
-    const id = 'dish_' + Date.now();
-    const dish = { id, name, price, desc, imgURL: dishURL, filename };
-    dishes.push(dish);
+    const dish = {
+      id: 'dish_' + Date.now(),
+      name, price, desc, imgURL, filename
+    };
+
+    DISHES.push(dish);
     saveDishes();
     renderList();
-    resetDishForm();
+    resetForm();
     hideProc();
     document.getElementById('add-btn').disabled = false;
     showQR(dish);
     toast('✅ Dish add ho gayi!');
+
   } catch(err) {
     hideProc();
     document.getElementById('add-btn').disabled = false;
     toast('❌ Error: ' + err.message);
+    console.error(err);
   }
 }
 
-function resetDishForm() {
+function resetForm() {
   ['f-name','f-price','f-desc'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('f-img').value = '';
-  const prev = document.getElementById('dish-prev');
+  const prev = document.getElementById('img-prev');
   prev.src = ''; prev.style.display = 'none';
-  document.getElementById('dish-icon').style.display = 'block';
-  document.getElementById('dish-txt').style.display = 'block';
+  document.getElementById('ub-icon').style.display = 'block';
+  document.getElementById('ub-text').style.display = 'block';
 }
 
 function saveDishes() {
-  localStorage.setItem('ar_dishes_v5', JSON.stringify(dishes));
+  // Save without imgURL base64 — only URL strings
+  localStorage.setItem('armenu_dishes', JSON.stringify(DISHES));
 }
 
-// ════════════════════
+// ════════════════════════════════
 // RENDER LIST
-// ════════════════════
+// ════════════════════════════════
 function renderList() {
   const el = document.getElementById('dish-list');
-  if (!dishes.length) { el.innerHTML = '<div class="empty-msg">Koi dish nahi — upar se add karo!</div>'; return; }
-  el.innerHTML = dishes.map(d => `
-    <div class="dish-row">
-      ${d.imgURL ? `<img class="dish-row-img" src="${d.imgURL}" alt="${d.name}">` : `<div class="dish-row-img-ph">🍽</div>`}
-      <div class="dish-row-info">
-        <div class="dish-row-name">${d.name}</div>
-        <div class="dish-row-price">${d.price}</div>
-        ${d.desc ? `<div class="dish-row-desc">${d.desc}</div>` : ''}
+  if (!DISHES.length) {
+    el.innerHTML = '<div class="empty">Koi dish nahi — upar se add karo!</div>';
+    return;
+  }
+  el.innerHTML = DISHES.map(d => `
+    <div class="dish-item">
+      ${d.imgURL
+        ? `<img class="dish-item-img" src="${d.imgURL}" alt="${d.name}">`
+        : `<div class="dish-item-img-ph">🍽</div>`}
+      <div class="dish-item-info">
+        <div class="dish-item-name">${d.name}</div>
+        <div class="dish-item-price">${d.price}</div>
+        ${d.desc ? `<div class="dish-item-desc">${d.desc}</div>` : ''}
       </div>
-      <div class="dish-row-btns">
-        <button class="row-btn qr" onclick="showQRById('${d.id}')">QR Code</button>
-        <button class="row-btn del" onclick="delDish('${d.id}')">Delete</button>
+      <div class="dish-item-btns">
+        <button class="di-btn qr" onclick="showQRById('${d.id}')">QR</button>
+        <button class="di-btn del" onclick="delDish('${d.id}')">Del</button>
       </div>
     </div>
   `).join('');
 }
 
 function delDish(id) {
-  dishes = dishes.filter(d => d.id !== id);
+  DISHES = DISHES.filter(d => d.id !== id);
   saveDishes(); renderList();
   toast('🗑 Dish remove ho gayi');
 }
 
-// ════════════════════
+// ════════════════════════════════
 // QR GENERATION
-// QR mein .mind file URL + dish img URL — chhota URL!
-// ════════════════════
+// QR mein URL params: name, price, desc, image URL
+// Chhota URL — koi base64 nahi!
+// ════════════════════════════════
 function showQRById(id) {
-  const dish = dishes.find(d => d.id === id);
+  const dish = DISHES.find(d => d.id === id);
   if (dish) showQR(dish);
 }
 
 function showQR(dish) {
-  if (!targetData?.mindURL) { toast('⚠️ Pehle logo upload karo!'); return; }
   currentQRDish = dish;
 
   const params = new URLSearchParams({
     n: dish.name,
     p: dish.price,
     d: dish.desc || '',
-    i: dish.imgURL,          // dish image URL
-    m: targetData.mindURL    // .mind file URL — direct use hoga AR mein!
+    i: dish.imgURL
   });
-  const arURL = arPageURL() + '?' + params.toString();
+  const url = AR_URL() + '?' + params.toString();
 
   document.getElementById('qm-name').textContent = dish.name;
   document.getElementById('qm-price').textContent = dish.price;
 
-  const wrap = document.getElementById('qr-render');
+  const wrap = document.getElementById('qr-wrap');
   wrap.innerHTML = '';
   new QRCode(wrap, {
-    text: arURL, width: 200, height: 200,
-    colorDark: '#0f0e0c', colorLight: '#ffffff',
+    text: url, width: 200, height: 200,
+    colorDark: '#000000', colorLight: '#ffffff',
     correctLevel: QRCode.CorrectLevel.M
   });
+
   document.getElementById('qr-modal').classList.add('open');
 }
 
 function closeQR() { document.getElementById('qr-modal').classList.remove('open'); }
 
-function downloadQR() {
+function dlQR() {
   setTimeout(() => {
-    const canvas = document.querySelector('#qr-render canvas');
+    const canvas = document.querySelector('#qr-wrap canvas');
     if (!canvas) { toast('QR ready nahi'); return; }
     const a = document.createElement('a');
     a.download = (currentQRDish?.name || 'dish') + '-QR.png';
     a.href = canvas.toDataURL();
     a.click();
     toast('📥 QR download ho gaya!');
-  }, 200);
+  }, 100);
 }
 
-// ════════════════════
-// PROCESSING OVERLAY
-// ════════════════════
+// ════════════════════════════════
+// PROCESSING
+// ════════════════════════════════
 function showProc(msg, pct) {
-  document.getElementById('proc-text').textContent = msg;
-  document.getElementById('proc-bar').style.width = (pct || 0) + '%';
-  document.getElementById('processing').classList.add('show');
+  document.getElementById('proc-msg').textContent = msg;
+  document.getElementById('proc-bar').style.width = (pct||0) + '%';
+  document.getElementById('proc').classList.add('show');
 }
 function setProc(msg, pct) {
-  document.getElementById('proc-text').textContent = msg;
+  document.getElementById('proc-msg').textContent = msg;
   if (pct !== undefined) document.getElementById('proc-bar').style.width = pct + '%';
 }
-function hideProc() { document.getElementById('processing').classList.remove('show'); }
+function hideProc() { document.getElementById('proc').classList.remove('show'); }
 
-// ════════════════════
+// ════════════════════════════════
 // TOAST
-// ════════════════════
+// ════════════════════════════════
 function toast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3500);
+  setTimeout(() => t.classList.remove('show'), 3000);
 }
 
-// ════════════════════
+// ════════════════════════════════
 // INIT
-// ════════════════════
-if (CONFIG.token) {
-  document.getElementById('gh-user').value = CONFIG.user || 'mahaveersinh4';
-  document.getElementById('gh-repo').value = CONFIG.repo || 'ar-menu';
-  document.getElementById('gh-token').value = CONFIG.token;
-  document.getElementById('config-saved-msg').style.display = 'flex';
-}
-if (targetData?.imgURL) {
-  document.getElementById('target-thumb').src = targetData.imgURL;
-  document.getElementById('target-set').style.display = 'block';
-  document.getElementById('target-box').style.display = 'none';
+// ════════════════════════════════
+if (CFG.token) {
+  document.getElementById('gh-user').value = CFG.user || 'mahaveersinh4';
+  document.getElementById('gh-repo').value = CFG.repo || 'ar-menu';
+  document.getElementById('gh-token').value = CFG.token;
+  showCfgStatus(true);
 }
 renderList();
 </script>
