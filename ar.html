@@ -12,27 +12,21 @@
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 html, body { width:100%; height:100%; overflow:hidden; background:#000; font-family:'Jost',sans-serif; }
 
-/* Loading */
 #loading {
   position:fixed; inset:0; z-index:100; background:#0f0e0c;
   display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1rem;
   background-image:radial-gradient(ellipse 80% 50% at 50% 30%, rgba(184,134,11,0.1) 0%, transparent 70%);
 }
-.load-ring {
-  width:64px; height:64px; border-radius:50%;
-  border:2px solid rgba(218,165,32,0.2); border-top-color:#daa520;
-  animation:spin 1s linear infinite;
-}
+.load-ring { width:64px; height:64px; border-radius:50%; border:2px solid rgba(218,165,32,0.2); border-top-color:#daa520; animation:spin 1s linear infinite; }
 @keyframes spin { to{transform:rotate(360deg)} }
 .load-title { font-family:'Cormorant Garamond',serif; font-size:1.6rem; color:#daa520; }
-.load-msg { font-size:0.72rem; color:rgba(255,255,255,0.4); letter-spacing:0.12em; text-transform:uppercase; text-align:center; max-width:260px; line-height:1.6; }
-.load-step { font-size:0.78rem; color:rgba(255,255,255,0.5); display:flex; align-items:center; gap:0.6rem; margin-top:0.3rem; }
+.load-msg { font-size:0.75rem; color:rgba(255,255,255,0.4); letter-spacing:0.1em; text-align:center; max-width:260px; line-height:1.6; }
+.load-step { font-size:0.78rem; color:rgba(255,255,255,0.5); display:flex; align-items:center; gap:0.6rem; }
 .load-step .dot { width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,0.15); flex-shrink:0; transition:background 0.3s; }
 .load-step.active .dot { background:#daa520; animation:pd 0.8s infinite; }
 .load-step.done .dot { background:#4caf50; }
 @keyframes pd { 0%,100%{opacity:1} 50%{opacity:0.2} }
 
-/* Error */
 #error-screen {
   position:fixed; inset:0; z-index:100; background:#0f0e0c;
   display:none; flex-direction:column; align-items:center; justify-content:center;
@@ -43,10 +37,8 @@ html, body { width:100%; height:100%; overflow:hidden; background:#000; font-fam
 .err-msg { font-size:0.82rem; color:rgba(255,255,255,0.5); line-height:1.7; max-width:300px; }
 .err-btn { background:linear-gradient(135deg,#b8860b,#8b6914); color:#fff; border:none; padding:0.75rem 2rem; border-radius:50px; font-family:'Jost',sans-serif; font-size:0.88rem; cursor:pointer; margin-top:0.5rem; }
 
-/* AR scene */
 #ar-wrap { position:fixed; inset:0; z-index:1; display:none; }
 
-/* Top bar */
 #topbar {
   position:fixed; top:0; left:0; right:0; z-index:50;
   padding:0.8rem 1rem;
@@ -54,94 +46,55 @@ html, body { width:100%; height:100%; overflow:hidden; background:#000; font-fam
   display:none; align-items:center; justify-content:space-between;
 }
 .tb-title { font-family:'Cormorant Garamond',serif; font-size:1rem; color:#daa520; }
-.tb-close {
-  background:rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.15);
-  color:#fff; padding:0.35rem 0.85rem; border-radius:50px;
-  font-family:'Jost',sans-serif; font-size:0.72rem; cursor:pointer;
-}
+.tb-close { background:rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.15); color:#fff; padding:0.35rem 0.85rem; border-radius:50px; font-family:'Jost',sans-serif; font-size:0.72rem; cursor:pointer; }
 
-/* Scan hint */
 #scan-hint {
   position:fixed; bottom:0; left:0; right:0; z-index:50;
-  background:linear-gradient(transparent, rgba(0,0,0,0.88));
+  background:linear-gradient(transparent, rgba(0,0,0,0.9));
   padding:4rem 1.5rem 2.5rem;
   display:none; flex-direction:column; align-items:center; gap:0.8rem;
   transition:opacity 0.5s;
 }
-.hint-box {
-  border:1.5px solid rgba(218,165,32,0.5); border-radius:12px;
-  padding:0.6rem 1.5rem; font-size:0.78rem; color:rgba(255,255,255,0.75);
-  letter-spacing:0.08em; text-align:center;
-  animation:hpulse 2s ease-in-out infinite;
-  display:flex; align-items:center; gap:0.5rem;
-}
-@keyframes hpulse { 0%,100%{opacity:0.7;border-color:rgba(218,165,32,0.3)} 50%{opacity:1;border-color:rgba(218,165,32,0.8)} }
+.hint-box { border:1.5px solid rgba(218,165,32,0.5); border-radius:12px; padding:0.6rem 1.5rem; font-size:0.78rem; color:rgba(255,255,255,0.8); text-align:center; animation:hpulse 2s ease-in-out infinite; }
+@keyframes hpulse { 0%,100%{opacity:0.7;border-color:rgba(218,165,32,0.3)} 50%{opacity:1;border-color:rgba(218,165,32,0.9)} }
 
-/* Dish UI (when target found) */
 #dish-ui {
   position:fixed; bottom:0; left:0; right:0; z-index:50;
   background:linear-gradient(transparent, rgba(8,7,5,0.97) 35%);
   padding:3rem 1.2rem 1.8rem;
   display:none; flex-direction:column; align-items:center; gap:1rem;
 }
-.dish-tag {
-  background:rgba(15,14,12,0.85); backdrop-filter:blur(14px);
-  border:1px solid rgba(218,165,32,0.4); border-radius:50px;
-  padding:0.5rem 1.6rem; text-align:center;
-}
+.dish-tag { background:rgba(15,14,12,0.85); backdrop-filter:blur(14px); border:1px solid rgba(218,165,32,0.4); border-radius:50px; padding:0.5rem 1.6rem; text-align:center; }
 .dt-name { font-family:'Cormorant Garamond',serif; font-size:1.2rem; color:#daa520; display:block; }
 .dt-price { font-size:0.72rem; color:rgba(255,255,255,0.5); display:block; margin-top:0.1rem; }
 
-/* Slider */
 .rot-wrap { width:100%; max-width:320px; }
 .rot-lbl { font-size:0.6rem; letter-spacing:0.2em; text-transform:uppercase; color:rgba(255,255,255,0.3); text-align:center; margin-bottom:0.5rem; }
 .rot-row { display:flex; align-items:center; gap:0.8rem; }
 .rot-row span { font-size:0.9rem; color:#daa520; }
-input#rot {
-  -webkit-appearance:none; flex:1; height:3px; border-radius:3px;
-  outline:none; cursor:pointer; background:rgba(255,255,255,0.15);
-}
-input#rot::-webkit-slider-thumb {
-  -webkit-appearance:none; width:22px; height:22px; border-radius:50%;
-  background:linear-gradient(135deg,#daa520,#b8860b);
-  box-shadow:0 2px 10px rgba(184,134,11,0.5);
-}
+input#rot { -webkit-appearance:none; flex:1; height:3px; border-radius:3px; outline:none; cursor:pointer; background:rgba(255,255,255,0.15); }
+input#rot::-webkit-slider-thumb { -webkit-appearance:none; width:22px; height:22px; border-radius:50%; background:linear-gradient(135deg,#daa520,#b8860b); box-shadow:0 2px 10px rgba(184,134,11,0.5); }
 
-/* Actions */
 .ar-actions { display:flex; gap:0.6rem; flex-wrap:wrap; justify-content:center; }
-.ar-btn {
-  background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.1);
-  color:#faf7f2; padding:0.6rem 1rem; border-radius:50px;
-  font-family:'Jost',sans-serif; font-size:0.78rem; cursor:pointer;
-  display:flex; align-items:center; gap:0.35rem; transition:all 0.2s;
-}
+.ar-btn { background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.1); color:#faf7f2; padding:0.6rem 1rem; border-radius:50px; font-family:'Jost',sans-serif; font-size:0.78rem; cursor:pointer; display:flex; align-items:center; gap:0.35rem; transition:all 0.2s; }
 .ar-btn:hover { background:rgba(184,134,11,0.2); border-color:#b8860b; }
 .ar-btn.order { background:linear-gradient(135deg,#b8860b,#8b6914); border-color:transparent; font-weight:500; }
 
-/* Toast */
-#toast {
-  position:fixed; top:4.5rem; left:50%; transform:translateX(-50%);
-  background:rgba(15,14,12,0.92); border:1px solid rgba(184,134,11,0.4);
-  color:#faf7f2; padding:0.55rem 1.3rem; border-radius:50px;
-  font-size:0.78rem; z-index:999; opacity:0; transition:opacity 0.3s;
-  pointer-events:none; white-space:nowrap;
-}
+#toast { position:fixed; top:4.5rem; left:50%; transform:translateX(-50%); background:rgba(15,14,12,0.92); border:1px solid rgba(184,134,11,0.4); color:#faf7f2; padding:0.55rem 1.3rem; border-radius:50px; font-size:0.78rem; z-index:999; opacity:0; transition:opacity 0.3s; pointer-events:none; white-space:nowrap; }
 #toast.show { opacity:1; }
 </style>
 </head>
 <body>
 
-<!-- LOADING -->
 <div id="loading">
   <div class="load-ring"></div>
   <div class="load-title">✦ AR Menu</div>
-  <div class="load-msg" id="load-msg">Data load ho raha hai...</div>
+  <div class="load-msg" id="load-msg">Loading...</div>
   <div class="load-step" id="s1"><div class="dot"></div> Dish data load...</div>
   <div class="load-step" id="s2"><div class="dot"></div> Camera start...</div>
   <div class="load-step" id="s3"><div class="dot"></div> AR engine ready...</div>
 </div>
 
-<!-- ERROR -->
 <div id="error-screen">
   <div class="err-icon" id="err-icon">⚠️</div>
   <div class="err-title" id="err-title">Error</div>
@@ -149,21 +102,17 @@ input#rot::-webkit-slider-thumb {
   <button class="err-btn" onclick="location.reload()">🔄 Dobara Try Karo</button>
 </div>
 
-<!-- AR SCENE (injected) -->
 <div id="ar-wrap"></div>
 
-<!-- TOP BAR -->
 <div id="topbar">
   <div class="tb-title">✦ AR Menu</div>
   <button class="tb-close" onclick="history.back()">✕ Close</button>
 </div>
 
-<!-- SCAN HINT -->
 <div id="scan-hint">
-  <div class="hint-box">📷 &nbsp; Restaurant logo / menu card pe point karo</div>
+  <div class="hint-box">📷 Restaurant logo / menu card pe camera point karo</div>
 </div>
 
-<!-- DISH UI -->
 <div id="dish-ui">
   <div class="dish-tag">
     <span class="dt-name" id="ui-name">—</span>
@@ -187,9 +136,8 @@ input#rot::-webkit-slider-thumb {
 <div id="toast"></div>
 
 <script>
-// ── DECODE DISH FROM URL HASH ──
 let dish = null;
-let targetImgData = null;
+let targetURL = null;
 
 function step(id, state) {
   const el = document.getElementById(id);
@@ -205,70 +153,50 @@ function showError(icon, title, msg) {
   document.getElementById('err-msg').textContent = msg;
 }
 
-// Decode URL hash
+// ── READ URL PARAMS ──
 step('s1', 'active');
-try {
-  const hash = window.location.hash.slice(1); // remove #
-  if (!hash) throw new Error('No data in URL');
+const params = new URLSearchParams(window.location.search);
+const n = params.get('n');
+const p = params.get('p');
+const d = params.get('d');
+const i = params.get('i');  // dish image GitHub URL
+const t = params.get('t');  // target image GitHub URL
 
-  const decoded = decodeURIComponent(escape(atob(hash)));
-  const payload = JSON.parse(decoded);
+if (!n || !i || !t) {
+  showError('📵', 'QR Code Invalid', 'Yeh QR code sahi nahi hai. Restaurant staff se naya QR maango.');
+} else {
+  dish = { name: n, price: p, desc: d, imgURL: i };
+  targetURL = t;
 
-  dish = {
-    name: payload.n,
-    price: payload.p,
-    desc: payload.d,
-    img: payload.i
-  };
-  targetImgData = payload.t;
-
-  if (!dish.name || !dish.img || !targetImgData) throw new Error('Incomplete data');
-
-  step('s1', 'done');
-  document.getElementById('load-msg').textContent = 'Camera start ho rahi hai...';
-  step('s2', 'active');
-
-  // Set dish info
   document.getElementById('ui-name').textContent = dish.name;
   document.getElementById('ui-price').textContent = dish.price + (dish.desc ? ' • ' + dish.desc : '');
+  document.getElementById('load-msg').textContent = dish.name + ' load ho raha hai...';
 
+  step('s1', 'done');
+  step('s2', 'active');
   initAR();
-} catch(e) {
-  showError('📵', 'QR Code Invalid', 'Yeh QR code sahi nahi hai ya expire ho gaya. Restaurant staff se naya QR maango.');
 }
 
 // ── INIT AR ──
 async function initAR() {
-  // Camera check
+  // Camera permission check
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-    stream.getTracks().forEach(t => t.stop()); // release immediately, MindAR will open it again
+    stream.getTracks().forEach(t => t.stop());
     step('s2', 'done');
     step('s3', 'active');
+    document.getElementById('load-msg').textContent = 'AR engine start ho raha hai...';
   } catch(e) {
-    showError('📷', 'Camera Access Denied', 'Apne browser mein camera permission allow karo, phir page reload karo.');
+    showError('📷', 'Camera Access Denied', 'Browser mein camera permission allow karo, phir page reload karo.');
     return;
   }
 
-  // Convert base64 images to blob URLs
-  const targetBlobURL = base64ToBlobURL(targetImgData, 'image/jpeg');
-  const dishBlobURL = base64ToBlobURL(dish.img, 'image/jpeg');
-
-  buildScene(targetBlobURL, dishBlobURL);
-}
-
-function base64ToBlobURL(dataURL, type) {
-  const arr = dataURL.split(',');
-  const mime = arr[0].match(/:(.*?);/)?.[1] || type;
-  const bstr = atob(arr[1]);
-  const u8arr = new Uint8Array(bstr.length);
-  for (let i = 0; i < bstr.length; i++) u8arr[i] = bstr.charCodeAt(i);
-  const blob = new Blob([u8arr], { type: mime });
-  return URL.createObjectURL(blob);
+  buildScene();
 }
 
 // ── BUILD A-FRAME SCENE ──
-function buildScene(targetURL, dishImgURL) {
+// Target aur dish images directly GitHub URLs se load hongi
+function buildScene() {
   const wrap = document.getElementById('ar-wrap');
   wrap.innerHTML = `
     <a-scene
@@ -281,14 +209,14 @@ function buildScene(targetURL, dishImgURL) {
       style="position:fixed;inset:0;width:100%;height:100%;">
 
       <a-assets>
-        <img id="dish-img" src="${dishImgURL}" crossorigin="anonymous">
+        <img id="dish-tex" src="${dish.imgURL}" crossorigin="anonymous">
       </a-assets>
 
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
       <a-entity mindar-image-target="targetIndex: 0">
 
-        <!-- Shadow ellipse on target surface -->
+        <!-- Shadow on surface -->
         <a-ellipse
           position="0 0.01 0.005"
           semi-minor-axis="0.38" semi-major-axis="0.44"
@@ -296,23 +224,23 @@ function buildScene(targetURL, dishImgURL) {
           color="#000" opacity="0.3">
         </a-ellipse>
 
-        <!-- Glow ring -->
+        <!-- Gold glow ring -->
         <a-torus
-          position="0 0.015 0"
-          radius="0.28" radius-tubular="0.012"
+          position="0 0.02 0"
+          radius="0.3" radius-tubular="0.012"
           rotation="-90 0 0"
-          color="#daa520" opacity="0.35"
-          animation="property:scale; from:1 1 1; to:1.1 1.1 1.1; dur:1800; dir:alternate; loop:true; easing:easeInOutSine;">
+          color="#daa520" opacity="0.4"
+          animation="property:scale; from:1 1 1; to:1.12 1.12 1.12; dur:1800; dir:alternate; loop:true; easing:easeInOutSine;">
         </a-torus>
 
-        <!-- Dish image floating above target -->
+        <!-- Dish floating above target image -->
         <a-image
           id="ar-dish"
-          src="#dish-img"
+          src="#dish-tex"
           position="0 0.5 0"
           width="0.9" height="0.9"
           rotation="0 0 0"
-          animation="property:position; from:0 0.46 0; to:0 0.54 0; dur:2200; dir:alternate; loop:true; easing:easeInOutSine;">
+          animation="property:position; from:0 0.46 0; to:0 0.55 0; dur:2200; dir:alternate; loop:true; easing:easeInOutSine;">
         </a-image>
 
       </a-entity>
@@ -328,12 +256,12 @@ function buildScene(targetURL, dishImgURL) {
       document.getElementById('loading').style.display = 'none';
       document.getElementById('topbar').style.display = 'flex';
       document.getElementById('scan-hint').style.display = 'flex';
-    }, 500);
+    }, 600);
     toast('📷 Restaurant logo pe camera point karo');
   });
 
   scene.addEventListener('arError', () => {
-    showError('⚠️', 'AR Error', 'AR start nahi hua. HTTPS connection check karo aur Chrome use karo.');
+    showError('⚠️', 'AR Error', 'AR start nahi hua. Chrome browser use karo aur HTTPS check karo.');
   });
 
   scene.addEventListener('targetFound', () => {
@@ -368,7 +296,7 @@ function takePhoto() {
       return;
     } catch(e) {}
   }
-  toast('📸 Screenshot lo (Power + Volume Down)');
+  toast('📸 Power + Volume Down dabao screenshot ke liye');
 }
 
 function orderNow() {
@@ -377,15 +305,13 @@ function orderNow() {
 
 function sharePage() {
   if (navigator.share) {
-    navigator.share({ title: dish.name, url: window.location.href }).catch(()=>{});
+    navigator.share({ title: dish.name + ' - AR Menu', url: window.location.href }).catch(()=>{});
   } else {
     navigator.clipboard?.writeText(window.location.href)
-      .then(() => toast('🔗 Link copy ho gaya!'))
-      .catch(() => toast('🔗 URL copy karo: ' + window.location.href));
+      .then(() => toast('🔗 Link copy ho gaya!'));
   }
 }
 
-// ── TOAST ──
 function toast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
