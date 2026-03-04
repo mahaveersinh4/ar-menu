@@ -1,1 +1,453 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>AR Menu</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<!-- jsQR: lightweight QR detector — no external AR library needed! -->
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body { width:100%; height:100%; overflow:hidden; background:#000; font-family:'DM Sans',sans-serif; }
+
+/* Camera + AR canvas stacked */
+#cam { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; display:none; }
+#ar-canvas { position:fixed; inset:0; width:100%; height:100%; pointer-events:none; display:none; }
+
+/* Loading */
+#loading {
+  position:fixed; inset:0; z-index:50; background:#0a0908;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0.8rem;
+  background-image:radial-gradient(ellipse 70% 50% at 50% 30%, rgba(201,146,42,0.08) 0%, transparent 70%);
+}
+.load-ring { width:56px; height:56px; border-radius:50%; border:2px solid rgba(201,146,42,0.15); border-top-color:#c9922a; animation:spin 1s linear infinite; }
+@keyframes spin { to{transform:rotate(360deg)} }
+.load-title { font-family:'Playfair Display',serif; font-size:1.5rem; color:#e8b84b; }
+.load-step { font-size:0.75rem; color:rgba(255,255,255,0.4); display:flex; align-items:center; gap:0.5rem; }
+.dot { width:7px; height:7px; border-radius:50%; background:rgba(255,255,255,0.12); flex-shrink:0; }
+.load-step.done .dot { background:#4caf7d; }
+.load-step.active .dot { background:#c9922a; animation:pd 0.8s infinite; }
+.load-step.fail .dot { background:#e05555; }
+@keyframes pd { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+/* Error */
+#error {
+  position:fixed; inset:0; z-index:50; background:#0a0908;
+  display:none; flex-direction:column; align-items:center; justify-content:center;
+  padding:2rem; text-align:center; gap:1rem;
+}
+.err-icon { font-size:2.8rem; }
+.err-title { font-family:'Playfair Display',serif; font-size:1.4rem; color:#e8b84b; }
+.err-msg { font-size:0.8rem; color:rgba(255,255,255,0.45); line-height:1.7; max-width:280px; }
+.err-btn { background:linear-gradient(135deg,#c9922a,#8b6218); color:#fff; border:none; padding:0.7rem 1.8rem; border-radius:50px; font-family:'DM Sans',sans-serif; font-size:0.85rem; cursor:pointer; }
+
+/* Top bar */
+#topbar {
+  position:fixed; top:0; left:0; right:0; z-index:30;
+  padding:0.8rem 1rem;
+  background:linear-gradient(rgba(0,0,0,0.55), transparent);
+  display:none; align-items:center; justify-content:space-between;
+}
+.tb-logo { font-family:'Playfair Display',serif; font-size:0.95rem; color:#e8b84b; }
+.tb-close { background:rgba(0,0,0,0.45); border:1px solid rgba(255,255,255,0.12); color:#fff; padding:0.3rem 0.8rem; border-radius:50px; font-family:'DM Sans',sans-serif; font-size:0.7rem; cursor:pointer; }
+
+/* Scan hint */
+#hint {
+  position:fixed; bottom:0; left:0; right:0; z-index:30;
+  background:linear-gradient(transparent, rgba(0,0,0,0.88));
+  padding:3.5rem 1.5rem 2.5rem;
+  display:none; flex-direction:column; align-items:center; gap:0.6rem;
+  transition:opacity 0.4s;
+}
+.hint-pill {
+  border:1.5px solid rgba(201,146,42,0.5); border-radius:50px;
+  padding:0.55rem 1.4rem; font-size:0.76rem; color:rgba(255,255,255,0.75);
+  animation:hpulse 2s ease-in-out infinite; text-align:center;
+}
+@keyframes hpulse { 0%,100%{opacity:0.6} 50%{opacity:1} }
+
+/* Dish info (shown when QR detected) */
+#dish-info {
+  position:fixed; bottom:0; left:0; right:0; z-index:30;
+  background:linear-gradient(transparent, rgba(8,7,6,0.96) 40%);
+  padding:3rem 1.2rem 1.8rem;
+  display:none; flex-direction:column; align-items:center; gap:0.8rem;
+}
+.dish-tag {
+  background:rgba(10,9,8,0.85); backdrop-filter:blur(12px);
+  border:1px solid rgba(201,146,42,0.35); border-radius:50px;
+  padding:0.45rem 1.4rem; text-align:center;
+}
+.dt-name { font-family:'Playfair Display',serif; font-size:1.1rem; color:#e8b84b; display:block; }
+.dt-price { font-size:0.68rem; color:rgba(255,255,255,0.45); display:block; margin-top:0.1rem; }
+
+/* 360 slider */
+.rot-section { width:100%; max-width:300px; }
+.rot-label { font-size:0.58rem; letter-spacing:0.2em; text-transform:uppercase; color:rgba(255,255,255,0.28); text-align:center; margin-bottom:0.45rem; }
+.rot-row { display:flex; align-items:center; gap:0.7rem; }
+.rot-row span { font-size:0.85rem; color:#c9922a; }
+input#rot {
+  -webkit-appearance:none; flex:1; height:3px; border-radius:3px;
+  outline:none; cursor:pointer; background:rgba(255,255,255,0.12);
+}
+input#rot::-webkit-slider-thumb {
+  -webkit-appearance:none; width:20px; height:20px; border-radius:50%;
+  background:linear-gradient(135deg,#e8b84b,#c9922a);
+  box-shadow:0 2px 8px rgba(201,146,42,0.4);
+}
+
+/* Toast */
+#toast {
+  position:fixed; top:4rem; left:50%; transform:translateX(-50%);
+  background:rgba(10,9,8,0.9); border:1px solid rgba(201,146,42,0.3);
+  color:#f0ece4; padding:0.5rem 1.2rem; border-radius:50px;
+  font-size:0.75rem; z-index:99; opacity:0; transition:opacity 0.3s;
+  pointer-events:none; white-space:nowrap;
+}
+#toast.show { opacity:1; }
+</style>
+</head>
+<body>
+
+<!-- Camera feed (hidden — we use canvas for display) -->
+<video id="cam" autoplay playsinline muted></video>
+<!-- AR canvas — draws camera + dish overlay -->
+<canvas id="ar-canvas"></canvas>
+
+<!-- Loading -->
+<div id="loading">
+  <div class="load-ring"></div>
+  <div class="load-title">✦ AR Menu</div>
+  <div class="load-step" id="s1"><div class="dot"></div> Dish data load...</div>
+  <div class="load-step" id="s2"><div class="dot"></div> Camera start...</div>
+  <div class="load-step" id="s3"><div class="dot"></div> AR ready...</div>
+</div>
+
+<!-- Error -->
+<div id="error">
+  <div class="err-icon" id="err-icon">⚠️</div>
+  <div class="err-title" id="err-title">Error</div>
+  <div class="err-msg" id="err-msg">Kuch galat hua.</div>
+  <button class="err-btn" onclick="location.reload()">🔄 Try Again</button>
+</div>
+
+<!-- Top bar -->
+<div id="topbar">
+  <div class="tb-logo">✦ AR Menu</div>
+  <button class="tb-close" onclick="stopAR()">✕</button>
+</div>
+
+<!-- Scan hint -->
+<div id="hint">
+  <div class="hint-pill">📷 Table pe rakhe QR code pe camera point karo</div>
+</div>
+
+<!-- Dish info (when detected) -->
+<div id="dish-info">
+  <div class="dish-tag">
+    <span class="dt-name" id="ui-name">—</span>
+    <span class="dt-price" id="ui-price">—</span>
+  </div>
+  <div class="rot-section">
+    <div class="rot-label">🔄 360° Rotate</div>
+    <div class="rot-row">
+      <span>↺</span>
+      <input type="range" id="rot" min="0" max="360" value="0">
+      <span>↻</span>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ════════════════════════════════
+// STATE
+// ════════════════════════════════
+let dish = null;
+let dishImg = null;       // loaded Image object
+let camStream = null;
+let animFrame = null;
+let rotAngle = 0;
+let lastQR = null;        // last detected QR position
+let qrLostTimer = null;
+let isDetected = false;
+let floatOffset = 0;      // for floating animation
+let floatDir = 1;
+
+// ════════════════════════════════
+// STEP HELPERS
+// ════════════════════════════════
+function step(id, state) {
+  const el = document.getElementById(id);
+  if (el) el.className = 'load-step ' + state;
+}
+function showErr(icon, title, msg) {
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('error').style.display = 'flex';
+  document.getElementById('err-icon').textContent = icon;
+  document.getElementById('err-title').textContent = title;
+  document.getElementById('err-msg').textContent = msg;
+}
+
+// ════════════════════════════════
+// READ DISH FROM URL
+// ════════════════════════════════
+step('s1', 'active');
+const params = new URLSearchParams(window.location.search);
+const n = params.get('n');
+const p = params.get('p');
+const d = params.get('d') || '';
+const imgURL = params.get('i');
+
+if (!n || !imgURL) {
+  showErr('📵', 'QR Invalid', 'Yeh link sahi nahi hai. Restaurant staff se naya QR maango.');
+} else {
+  dish = { name: n, price: p, desc: d, imgURL };
+  document.getElementById('ui-name').textContent = dish.name;
+  document.getElementById('ui-price').textContent = dish.price + (d ? ' • ' + d : '');
+  step('s1', 'done');
+  init();
+}
+
+// ════════════════════════════════
+// INIT
+// ════════════════════════════════
+async function init() {
+  // Load dish image
+  dishImg = new Image();
+  dishImg.crossOrigin = 'anonymous';
+  dishImg.src = imgURL;
+  // Don't wait — load in background
+
+  // Camera
+  step('s2', 'active');
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: { ideal: 'environment' },
+        width: { ideal: 1280 },
+        height: { ideal: 720 }
+      }
+    });
+    const vid = document.getElementById('cam');
+    vid.srcObject = camStream;
+    await vid.play();
+    step('s2', 'done');
+  } catch(e) {
+    step('s2', 'fail');
+    showErr('📷', 'Camera Nahi Mili', 'Browser mein camera allow karo:\nAddress bar → 🔒 → Camera → Allow\nPhir reload karo.');
+    return;
+  }
+
+  // AR ready
+  step('s3', 'active');
+  startARLoop();
+  step('s3', 'done');
+
+  setTimeout(() => {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('topbar').style.display = 'flex';
+    document.getElementById('hint').style.display = 'flex';
+    toast('📷 Table pe QR code pe camera point karo');
+  }, 400);
+}
+
+// ════════════════════════════════
+// AR LOOP — runs every frame
+// ════════════════════════════════
+function startARLoop() {
+  const vid = document.getElementById('cam');
+  const canvas = document.getElementById('ar-canvas');
+  const ctx = canvas.getContext('2d');
+
+  // Rotation slider
+  document.getElementById('rot').addEventListener('input', e => {
+    rotAngle = parseInt(e.target.value);
+  });
+
+  canvas.style.display = 'block';
+
+  function loop() {
+    if (vid.readyState < 2) { animFrame = requestAnimationFrame(loop); return; }
+
+    // Resize canvas to match video
+    if (canvas.width !== vid.videoWidth || canvas.height !== vid.videoHeight) {
+      canvas.width = vid.videoWidth || 640;
+      canvas.height = vid.videoHeight || 480;
+    }
+
+    // Draw camera feed
+    ctx.drawImage(vid, 0, 0, canvas.width, canvas.height);
+
+    // Scan for QR
+    try {
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const qr = jsQR(imageData.data, imageData.width, imageData.height, {
+        inversionAttempts: 'dontInvert'
+      });
+
+      if (qr) {
+        // QR detected!
+        lastQR = qr;
+        clearTimeout(qrLostTimer);
+
+        if (!isDetected) {
+          isDetected = true;
+          onQRDetected();
+        }
+
+        // Draw dish above QR
+        drawDishOnQR(ctx, qr);
+
+      } else if (lastQR) {
+        // QR lost — keep showing for 1.5 sec
+        clearTimeout(qrLostTimer);
+        qrLostTimer = setTimeout(() => {
+          lastQR = null;
+          isDetected = false;
+          onQRLost();
+        }, 1500);
+
+        // Keep drawing at last position
+        if (lastQR) drawDishOnQR(ctx, lastQR);
+      }
+    } catch(e) {}
+
+    animFrame = requestAnimationFrame(loop);
+  }
+
+  animFrame = requestAnimationFrame(loop);
+}
+
+// ════════════════════════════════
+// DRAW DISH ABOVE QR
+// ════════════════════════════════
+function drawDishOnQR(ctx, qr) {
+  if (!dishImg.complete || dishImg.naturalWidth === 0) return;
+
+  const tl = qr.location.topLeftCorner;
+  const tr = qr.location.topRightCorner;
+  const bl = qr.location.bottomLeftCorner;
+  const br = qr.location.bottomRightCorner;
+
+  // QR center
+  const cx = (tl.x + tr.x + bl.x + br.x) / 4;
+  const cy = (tl.y + tr.y + bl.y + br.y) / 4;
+
+  // QR size
+  const qrW = Math.hypot(tr.x - tl.x, tr.y - tl.y);
+  const qrH = Math.hypot(bl.x - tl.x, bl.y - tl.y);
+  const qrSize = (qrW + qrH) / 2;
+
+  // Dish size — 1.8x QR size
+  const dishSize = qrSize * 1.8;
+
+  // Floating animation
+  floatOffset += 0.04 * floatDir;
+  if (floatOffset > 1) floatDir = -1;
+  if (floatOffset < -1) floatDir = 1;
+  const floatY = floatOffset * (qrSize * 0.08);
+
+  // Dish position — above QR center
+  const dishY = cy - qrSize * 0.6 - dishSize / 2 + floatY;
+
+  // Shadow below dish
+  ctx.save();
+  const shadowGrad = ctx.createRadialGradient(cx, cy - qrSize * 0.05, 0, cx, cy - qrSize * 0.05, qrSize * 0.55);
+  shadowGrad.addColorStop(0, 'rgba(0,0,0,0.35)');
+  shadowGrad.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = shadowGrad;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy - qrSize * 0.05, qrSize * 0.55, qrSize * 0.12, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // Gold glow ring
+  ctx.save();
+  ctx.beginPath();
+  ctx.ellipse(cx, cy - qrSize * 0.08, qrSize * 0.42, qrSize * 0.1, 0, 0, Math.PI * 2);
+  ctx.strokeStyle = `rgba(232,184,75,${0.35 + Math.abs(floatOffset) * 0.2})`;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.restore();
+
+  // Draw dish image — circular clip, rotated
+  ctx.save();
+  ctx.translate(cx, dishY);
+  ctx.rotate((rotAngle * Math.PI) / 180);
+
+  // Circular clip
+  ctx.beginPath();
+  ctx.arc(0, 0, dishSize / 2, 0, Math.PI * 2);
+  ctx.clip();
+
+  // Drop shadow
+  ctx.shadowColor = 'rgba(0,0,0,0.6)';
+  ctx.shadowBlur = dishSize * 0.15;
+  ctx.shadowOffsetY = dishSize * 0.05;
+
+  ctx.drawImage(dishImg, -dishSize / 2, -dishSize / 2, dishSize, dishSize);
+  ctx.restore();
+
+  // QR corner highlight
+  ctx.save();
+  ctx.strokeStyle = 'rgba(232,184,75,0.6)';
+  ctx.lineWidth = 2;
+  const corners = [tl, tr, br, bl];
+  const cSize = qrSize * 0.12;
+  corners.forEach((c, i) => {
+    ctx.beginPath();
+    ctx.moveTo(c.x, c.y);
+    const nextCorner = corners[(i + 1) % 4];
+    ctx.lineTo(c.x + (nextCorner.x - c.x) * 0.15, c.y + (nextCorner.y - c.y) * 0.15);
+    ctx.stroke();
+    const prevCorner = corners[(i + 3) % 4];
+    ctx.beginPath();
+    ctx.moveTo(c.x, c.y);
+    ctx.lineTo(c.x + (prevCorner.x - c.x) * 0.15, c.y + (prevCorner.y - c.y) * 0.15);
+    ctx.stroke();
+  });
+  ctx.restore();
+}
+
+// ════════════════════════════════
+// QR EVENTS
+// ════════════════════════════════
+function onQRDetected() {
+  document.getElementById('hint').style.opacity = '0';
+  document.getElementById('dish-info').style.display = 'flex';
+  toast('✨ ' + dish.name + ' AR mein aa gaya!');
+}
+
+function onQRLost() {
+  document.getElementById('hint').style.opacity = '1';
+  document.getElementById('dish-info').style.display = 'none';
+}
+
+function stopAR() {
+  if (animFrame) cancelAnimationFrame(animFrame);
+  if (camStream) camStream.getTracks().forEach(t => t.stop());
+  history.back();
+}
+
+// ════════════════════════════════
+// TOAST
+// ════════════════════════════════
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+// Stop camera when page hidden
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && camStream) {
+    camStream.getTracks().forEach(t => t.stop());
+  }
+});
+</script>
+</body>
+</html>
