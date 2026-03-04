@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AR Menu — Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root {
+  --ink: #0f0e0c;
+  --paper: #faf7f2;
+  --gold: #b8860b;
+  --gold2: #daa520;
+  --rust: #8b3a2a;
+  --muted: #7a7165;
+  --line: rgba(184,134,11,0.2);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Jost',sans-serif; background:#f5f1ea; color:var(--ink); min-height:100vh; }
+
+.header {
+  background:var(--ink); padding:1rem 1.5rem;
+  display:flex; align-items:center; justify-content:space-between;
+  position:sticky; top:0; z-index:10;
+}
+.header-title { font-family:'Cormorant Garamond',serif; font-size:1.4rem; color:var(--gold2); }
+.header-sub { font-size:0.62rem; color:rgba(255,255,255,0.35); letter-spacing:0.15em; text-transform:uppercase; }
+
+.container { max-width:640px; margin:0 auto; padding:1.5rem; display:flex; flex-direction:column; gap:1.5rem; }
+
+.sec-label {
+  font-size:0.62rem; letter-spacing:0.22em; text-transform:uppercase;
+  color:var(--muted); margin-bottom:0.7rem; display:flex; align-items:center; gap:0.5rem;
+}
+.sec-label::after { content:''; flex:1; height:1px; background:var(--line); }
+
+.card { background:#fff; border-radius:18px; padding:1.4rem; box-shadow:0 2px 16px rgba(0,0,0,0.07); border:1px solid rgba(0,0,0,0.06); }
+
+.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.8rem; }
+.field { display:flex; flex-direction:column; gap:0.3rem; }
+.field.full { grid-column:1/-1; }
+.field label { font-size:0.68rem; color:var(--muted); font-weight:500; letter-spacing:0.06em; }
+.field input {
+  border:1.5px solid rgba(0,0,0,0.1); border-radius:10px;
+  padding:0.65rem 0.9rem; font-family:'Jost',sans-serif; font-size:0.88rem;
+  background:#fafaf8; color:var(--ink); outline:none; transition:border-color 0.2s;
+}
+.field input:focus { border-color:var(--gold); }
+
+.upload-box {
+  border:2px dashed rgba(184,134,11,0.35); border-radius:14px;
+  padding:1.5rem; text-align:center; cursor:pointer;
+  transition:all 0.2s; background:rgba(184,134,11,0.02);
+  position:relative; overflow:hidden; min-height:110px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0.4rem;
+}
+.upload-box:hover { border-color:var(--gold); background:rgba(184,134,11,0.06); }
+.upload-box input[type=file] { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+.upload-box .u-icon { font-size:2rem; }
+.upload-box .u-text { font-size:0.75rem; color:var(--muted); }
+.upload-box .u-hint { font-size:0.65rem; color:rgba(122,113,101,0.5); }
+.upload-preview { width:100%; max-height:150px; object-fit:cover; border-radius:10px; display:none; }
+
+.submit-btn {
+  width:100%; background:linear-gradient(135deg,var(--gold),#8b6914);
+  color:#fff; border:none; border-radius:12px; padding:0.9rem;
+  font-family:'Jost',sans-serif; font-size:0.95rem; font-weight:500;
+  cursor:pointer; margin-top:0.6rem; transition:opacity 0.2s, transform 0.15s;
+  display:flex; align-items:center; justify-content:center; gap:0.5rem;
+}
+.submit-btn:hover { opacity:0.9; transform:translateY(-1px); }
+
+/* Target status */
+.target-status {
+  display:flex; align-items:center; gap:1rem; padding:0.8rem 1rem;
+  background:rgba(184,134,11,0.06); border-radius:12px; border:1px solid var(--line);
+  margin-bottom:1rem;
+}
+.target-thumb { width:56px; height:56px; border-radius:8px; object-fit:cover; flex-shrink:0; }
+.target-info .t-name { font-size:0.88rem; font-weight:500; }
+.target-info .t-hint { font-size:0.7rem; color:var(--muted); margin-top:0.2rem; }
+.reset-btn { background:none; border:none; font-size:1.2rem; cursor:pointer; color:var(--muted); margin-left:auto; }
+
+/* Dish list */
+.dish-grid { display:flex; flex-direction:column; gap:0.8rem; }
+.dish-row {
+  background:#fff; border-radius:14px; overflow:hidden;
+  display:flex; align-items:stretch;
+  box-shadow:0 1px 8px rgba(0,0,0,0.06); border:1px solid rgba(0,0,0,0.05);
+}
+.dish-row-img { width:88px; flex-shrink:0; object-fit:cover; background:#f0ece4; }
+.dish-row-img-ph { width:88px; flex-shrink:0; background:#f0ece4; display:flex; align-items:center; justify-content:center; font-size:2.2rem; }
+.dish-row-info { flex:1; padding:0.85rem 1rem; min-width:0; }
+.dish-row-name { font-family:'Cormorant Garamond',serif; font-size:1.1rem; font-weight:600; }
+.dish-row-price { font-size:0.8rem; color:var(--gold); margin-top:0.1rem; }
+.dish-row-desc { font-size:0.7rem; color:var(--muted); margin-top:0.2rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.dish-row-btns { display:flex; flex-direction:column; gap:0.4rem; padding:0.8rem 0.6rem; justify-content:center; }
+.row-btn { border:1px solid; border-radius:8px; padding:0.32rem 0.65rem; font-size:0.68rem; cursor:pointer; font-family:'Jost',sans-serif; white-space:nowrap; transition:all 0.2s; background:transparent; font-weight:500; }
+.row-btn.qr { color:var(--gold); border-color:rgba(184,134,11,0.4); }
+.row-btn.qr:hover { background:rgba(184,134,11,0.1); }
+.row-btn.del { color:var(--rust); border-color:rgba(139,58,42,0.3); }
+.row-btn.del:hover { background:rgba(139,58,42,0.08); }
+.empty-msg { text-align:center; padding:2.5rem; color:var(--muted); font-size:0.85rem; }
+
+/* Info note */
+.info-note {
+  background:rgba(184,134,11,0.07); border:1px solid var(--line);
+  border-radius:12px; padding:1rem 1.2rem;
+  font-size:0.78rem; color:var(--ink); line-height:1.7;
+}
+.info-note strong { color:var(--gold); }
+.info-note ol { padding-left:1.2rem; margin-top:0.4rem; }
+.info-note li { margin-bottom:0.3rem; }
+
+/* QR Modal */
+#qr-modal {
+  position:fixed; inset:0; z-index:200;
+  background:rgba(0,0,0,0.75); backdrop-filter:blur(8px);
+  display:none; align-items:center; justify-content:center; padding:1.5rem;
+}
+#qr-modal.open { display:flex; }
+.qr-box {
+  background:#fff; border-radius:22px; padding:2rem;
+  max-width:300px; width:100%; text-align:center;
+  box-shadow:0 20px 60px rgba(0,0,0,0.4);
+}
+.qr-dish-name { font-family:'Cormorant Garamond',serif; font-size:1.4rem; font-weight:700; }
+.qr-dish-price { font-size:0.78rem; color:var(--muted); margin-bottom:1.2rem; margin-top:0.2rem; }
+#qr-render { display:flex; justify-content:center; margin-bottom:1rem; }
+#qr-render canvas { border-radius:10px; border:6px solid white; box-shadow:0 4px 20px rgba(0,0,0,0.12); }
+.qr-note { font-size:0.65rem; color:var(--muted); margin-bottom:1.2rem; background:#f5f1ea; padding:0.5rem 0.8rem; border-radius:8px; line-height:1.5; }
+.qr-btns { display:flex; gap:0.7rem; }
+.qr-btns button { flex:1; padding:0.7rem; border-radius:10px; border:none; font-family:'Jost',sans-serif; font-size:0.82rem; cursor:pointer; font-weight:500; }
+.qr-dl { background:var(--gold); color:#fff; }
+.qr-cl { background:#f0ece4; color:var(--ink); }
+
+/* Processing overlay */
+#processing {
+  position:fixed; inset:0; z-index:300; background:rgba(15,14,12,0.8);
+  display:none; align-items:center; justify-content:center; flex-direction:column; gap:1rem;
+}
+#processing.show { display:flex; }
+.proc-spinner { width:48px; height:48px; border:3px solid rgba(218,165,32,0.2); border-top-color:#daa520; border-radius:50%; animation:spin 0.8s linear infinite; }
+@keyframes spin { to{transform:rotate(360deg)} }
+.proc-text { color:#daa520; font-size:0.88rem; letter-spacing:0.1em; }
+
+/* Toast */
+#toast {
+  position:fixed; bottom:1.5rem; left:50%; transform:translateX(-50%);
+  background:rgba(15,14,12,0.92); border:1px solid rgba(184,134,11,0.4);
+  color:#faf7f2; padding:0.6rem 1.4rem; border-radius:50px;
+  font-size:0.8rem; z-index:999; opacity:0; transition:opacity 0.3s;
+  pointer-events:none; white-space:nowrap;
+}
+#toast.show { opacity:1; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-title">✦ AR Menu Admin</div>
+    <div class="header-sub">Restaurant Owner Panel</div>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="info-note">
+    <strong>Kaise kaam karta hai:</strong>
+    <ol>
+      <li>Restaurant <strong>logo / menu card</strong> upload karo (table pe ye print hoga)</li>
+      <li>Dish add karo → <strong>QR generate</strong> hoga</li>
+      <li>QR print karo → table pe lagao</li>
+      <li>Customer QR scan kare → camera khule → <strong>logo pe point kare → dish AR mein dikhe!</strong></li>
+    </ol>
+  </div>
+
+  <!-- STEP 1: TARGET -->
+  <div>
+    <div class="sec-label">Step 1 — Restaurant Logo / Menu Card</div>
+    <div class="card">
+      <div id="target-set" style="display:none">
+        <div class="target-status">
+          <img id="target-thumb" class="target-thumb" src="" alt="">
+          <div class="target-info">
+            <div class="t-name">Logo set ✓</div>
+            <div class="t-hint">Camera isko detect karke dish dikhayega</div>
+          </div>
+          <button class="reset-btn" onclick="resetTarget()">×</button>
+        </div>
+      </div>
+      <div class="upload-box" id="target-box">
+        <input type="file" id="target-file" accept="image/*" onchange="uploadTarget(this)">
+        <div class="u-icon">🖼️</div>
+        <div class="u-text"><strong>Logo / Menu Card Upload Karo</strong></div>
+        <div class="u-hint">Yahi image table pe print hogi — camera isko scan karega</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2: ADD DISH -->
+  <div>
+    <div class="sec-label">Step 2 — Dish Add Karo</div>
+    <div class="card">
+      <div class="form-grid">
+        <div class="field">
+          <label>Dish Name *</label>
+          <input type="text" id="f-name" placeholder="Butter Chicken">
+        </div>
+        <div class="field">
+          <label>Price *</label>
+          <input type="text" id="f-price" placeholder="₹320">
+        </div>
+        <div class="field full">
+          <label>Description</label>
+          <input type="text" id="f-desc" placeholder="Creamy tomato curry...">
+        </div>
+        <div class="field full">
+          <label>Dish Photo *</label>
+          <div class="upload-box" id="dish-box">
+            <input type="file" id="f-img" accept="image/*" onchange="previewDish(this)">
+            <img class="upload-preview" id="dish-prev" src="" alt="">
+            <div class="u-icon" id="dish-icon">📷</div>
+            <div class="u-text" id="dish-txt">Dish ki photo upload karo</div>
+          </div>
+        </div>
+      </div>
+      <button class="submit-btn" onclick="addDish()">🔲 QR Code Generate Karo</button>
+    </div>
+  </div>
+
+  <!-- DISH LIST -->
+  <div>
+    <div class="sec-label">Saved Dishes</div>
+    <div class="dish-grid" id="dish-list">
+      <div class="empty-msg">Koi dish nahi — upar se add karo!</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- QR MODAL -->
+<div id="qr-modal">
+  <div class="qr-box">
+    <div class="qr-dish-name" id="qm-name"></div>
+    <div class="qr-dish-price" id="qm-price"></div>
+    <div id="qr-render"></div>
+    <div class="qr-note">📱 Customer yeh QR scan kare → camera khule → logo pe point kare → dish AR mein dikhe!</div>
+    <div class="qr-btns">
+      <button class="qr-dl" onclick="downloadQR()">⬇ Download QR</button>
+      <button class="qr-cl" onclick="closeQR()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- PROCESSING -->
+<div id="processing">
+  <div class="proc-spinner"></div>
+  <div class="proc-text">QR Generate ho raha hai...</div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── STATE ──
+let dishes = JSON.parse(localStorage.getItem('ar_dishes_v3') || '[]');
+let targetImgData = localStorage.getItem('ar_target_v3') || null;
+let currentQRDish = null;
+
+// GitHub Pages base URL — ar.html same folder mein hai
+const BASE_URL = window.location.href.replace('admin.html', '');
+
+// ── TARGET ──
+function uploadTarget(input) {
+  const file = input.files[0]; if (!file) return;
+  showProcessing('Logo compress ho raha hai...');
+  const reader = new FileReader();
+  reader.onload = e => {
+    // Compress target image
+    compressImage(e.target.result, 600, 0.8, compressed => {
+      targetImgData = compressed;
+      localStorage.setItem('ar_target_v3', compressed);
+      document.getElementById('target-thumb').src = compressed;
+      document.getElementById('target-set').style.display = 'block';
+      document.getElementById('target-box').style.display = 'none';
+      hideProcessing();
+      toast('✅ Logo save ho gaya!');
+    });
+  };
+  reader.readAsDataURL(file);
+}
+
+function resetTarget() {
+  targetImgData = null;
+  localStorage.removeItem('ar_target_v3');
+  document.getElementById('target-set').style.display = 'none';
+  document.getElementById('target-box').style.display = 'flex';
+  document.getElementById('target-file').value = '';
+}
+
+// ── DISH PREVIEW ──
+function previewDish(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const prev = document.getElementById('dish-prev');
+    prev.src = e.target.result; prev.style.display = 'block';
+    document.getElementById('dish-icon').style.display = 'none';
+    document.getElementById('dish-txt').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── COMPRESS IMAGE ──
+function compressImage(dataURL, maxSize, quality, callback) {
+  const img = new Image();
+  img.onload = () => {
+    const canvas = document.createElement('canvas');
+    let w = img.width, h = img.height;
+    if (w > maxSize || h > maxSize) {
+      if (w > h) { h = Math.round(h * maxSize / w); w = maxSize; }
+      else { w = Math.round(w * maxSize / h); h = maxSize; }
+    }
+    canvas.width = w; canvas.height = h;
+    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+    callback(canvas.toDataURL('image/jpeg', quality));
+  };
+  img.src = dataURL;
+}
+
+// ── ADD DISH ──
+function addDish() {
+  const name = document.getElementById('f-name').value.trim();
+  const price = document.getElementById('f-price').value.trim();
+  const desc = document.getElementById('f-desc').value.trim();
+  const imgEl = document.getElementById('dish-prev');
+  const rawImg = imgEl.style.display !== 'none' ? imgEl.src : null;
+
+  if (!name || !price) { toast('⚠️ Naam aur price daalo'); return; }
+  if (!rawImg) { toast('⚠️ Dish photo upload karo'); return; }
+  if (!targetImgData) { toast('⚠️ Pehle restaurant logo upload karo (Step 1)'); return; }
+
+  showProcessing('Dish compress ho rahi hai...');
+
+  // Compress dish image to keep URL small
+  compressImage(rawImg, 400, 0.75, dishCompressed => {
+    const id = 'dish_' + Date.now();
+    const dish = { id, name, price, desc, img: dishCompressed };
+    dishes.push(dish);
+    saveDishes();
+    renderList();
+    resetDishForm();
+    hideProcessing();
+    showQR(dish);
+    toast('✅ Dish add ho gayi!');
+  });
+}
+
+function resetDishForm() {
+  ['f-name','f-price','f-desc'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-img').value = '';
+  const prev = document.getElementById('dish-prev');
+  prev.src = ''; prev.style.display = 'none';
+  document.getElementById('dish-icon').style.display = 'block';
+  document.getElementById('dish-txt').style.display = 'block';
+}
+
+function saveDishes() {
+  try { localStorage.setItem('ar_dishes_v3', JSON.stringify(dishes)); }
+  catch(e) { toast('⚠️ Storage full! Image chhoti rakho'); }
+}
+
+// ── RENDER ──
+function renderList() {
+  const el = document.getElementById('dish-list');
+  if (!dishes.length) { el.innerHTML = '<div class="empty-msg">Koi dish nahi — upar se add karo!</div>'; return; }
+  el.innerHTML = dishes.map(d => `
+    <div class="dish-row">
+      ${d.img ? `<img class="dish-row-img" src="${d.img}" alt="${d.name}">` : `<div class="dish-row-img-ph">🍽</div>`}
+      <div class="dish-row-info">
+        <div class="dish-row-name">${d.name}</div>
+        <div class="dish-row-price">${d.price}</div>
+        ${d.desc ? `<div class="dish-row-desc">${d.desc}</div>` : ''}
+      </div>
+      <div class="dish-row-btns">
+        <button class="row-btn qr" onclick="showQRById('${d.id}')">QR Code</button>
+        <button class="row-btn del" onclick="delDish('${d.id}')">Delete</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function delDish(id) {
+  dishes = dishes.filter(d => d.id !== id);
+  saveDishes(); renderList();
+  toast('🗑 Dish remove ho gayi');
+}
+
+// ── QR GENERATION ──
+// Key insight: dish data + target image ko URL mein encode karo
+// Taaki phone pe bhi kaam kare bina kisi storage ke
+
+function showQRById(id) {
+  const dish = dishes.find(d => d.id === id);
+  if (dish) showQR(dish);
+}
+
+function showQR(dish) {
+  if (!targetImgData) { toast('⚠️ Pehle logo upload karo!'); return; }
+  currentQRDish = dish;
+
+  document.getElementById('qm-name').textContent = dish.name;
+  document.getElementById('qm-price').textContent = dish.price;
+
+  showProcessing('QR Generate ho raha hai...');
+
+  // Pack dish data + target into URL via compressed JSON → base64
+  setTimeout(() => {
+    try {
+      const payload = {
+        n: dish.name,
+        p: dish.price,
+        d: dish.desc || '',
+        i: dish.img,        // dish image (compressed base64)
+        t: targetImgData    // target image (compressed base64)
+      };
+
+      const jsonStr = JSON.stringify(payload);
+      const encoded = btoa(unescape(encodeURIComponent(jsonStr)));
+      const arURL = BASE_URL + 'ar.html#' + encoded;
+
+      const wrap = document.getElementById('qr-render');
+      wrap.innerHTML = '';
+
+      new QRCode(wrap, {
+        text: arURL,
+        width: 200, height: 200,
+        colorDark: '#0f0e0c', colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.L  // L = smaller QR for large data
+      });
+
+      hideProcessing();
+      document.getElementById('qr-modal').classList.add('open');
+    } catch(e) {
+      hideProcessing();
+      toast('❌ Error: Image bahut badi hai — chhoti image use karo');
+      console.error(e);
+    }
+  }, 100);
+}
+
+function closeQR() { document.getElementById('qr-modal').classList.remove('open'); }
+
+function downloadQR() {
+  setTimeout(() => {
+    const canvas = document.querySelector('#qr-render canvas');
+    if (!canvas) { toast('QR ready nahi'); return; }
+    const a = document.createElement('a');
+    a.download = (currentQRDish?.name || 'dish') + '-QR.png';
+    a.href = canvas.toDataURL();
+    a.click();
+    toast('📥 QR download ho gaya!');
+  }, 200);
+}
+
+// ── PROCESSING ──
+function showProcessing(msg) {
+  document.querySelector('.proc-text').textContent = msg || 'Processing...';
+  document.getElementById('processing').classList.add('show');
+}
+function hideProcessing() { document.getElementById('processing').classList.remove('show'); }
+
+// ── TOAST ──
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── INIT ──
+if (targetImgData) {
+  document.getElementById('target-thumb').src = targetImgData;
+  document.getElementById('target-set').style.display = 'block';
+  document.getElementById('target-box').style.display = 'none';
+}
+renderList();
+</script>
+</body>
+</html>
