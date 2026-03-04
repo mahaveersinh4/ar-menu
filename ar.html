@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>AR Menu</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<!-- Load A-Frame + MindAR — .mind file already compiled, phone just loads it! -->
+<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js"></script>
+<script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 html, body { width:100%; height:100%; overflow:hidden; background:#000; font-family:'Jost',sans-serif; }
@@ -24,8 +28,6 @@ html, body { width:100%; height:100%; overflow:hidden; background:#000; font-fam
 .load-step.done .dot { background:#4caf50; }
 .load-step.error .dot { background:#f44336; }
 @keyframes pd { 0%,100%{opacity:1} 50%{opacity:0.2} }
-.load-progress { width:200px; height:4px; background:rgba(255,255,255,0.1); border-radius:4px; overflow:hidden; }
-.load-progress-bar { height:100%; background:linear-gradient(90deg,#b8860b,#daa520); border-radius:4px; transition:width 0.3s; width:0%; }
 
 #error-screen {
   position:fixed; inset:0; z-index:100; background:#0f0e0c;
@@ -90,11 +92,9 @@ input#rot::-webkit-slider-thumb { -webkit-appearance:none; width:22px; height:22
   <div class="load-ring"></div>
   <div class="load-title">✦ AR Menu</div>
   <div class="load-msg" id="load-msg">Shuru ho raha hai...</div>
-  <div class="load-progress"><div class="load-progress-bar" id="prog-bar"></div></div>
-  <div class="load-step" id="s1"><div class="dot"></div> Dish data load...</div>
+  <div class="load-step" id="s1"><div class="dot"></div> Dish data...</div>
   <div class="load-step" id="s2"><div class="dot"></div> Camera permission...</div>
-  <div class="load-step" id="s3"><div class="dot"></div> Target image compile...</div>
-  <div class="load-step" id="s4"><div class="dot"></div> AR engine start...</div>
+  <div class="load-step" id="s3"><div class="dot"></div> AR engine start...</div>
 </div>
 
 <div id="error-screen">
@@ -137,17 +137,15 @@ input#rot::-webkit-slider-thumb { -webkit-appearance:none; width:22px; height:22
 
 <div id="toast"></div>
 
-<!-- Load MindAR AFTER scene is ready -->
 <script>
 let dish = null;
-let targetImgURL = null;
+let mindURL = null;
 
 function step(id, state) {
   const el = document.getElementById(id);
   if (el) el.className = 'load-step ' + state;
 }
 function setMsg(msg) { document.getElementById('load-msg').textContent = msg; }
-function setProgress(pct) { document.getElementById('prog-bar').style.width = pct + '%'; }
 
 function showError(icon, title, msg) {
   document.getElementById('loading').style.display = 'none';
@@ -159,124 +157,49 @@ function showError(icon, title, msg) {
 
 // ── STEP 1: READ URL PARAMS ──
 step('s1', 'active');
-setMsg('Dish data read ho raha hai...');
-
 const params = new URLSearchParams(window.location.search);
 const n = params.get('n');
 const p = params.get('p');
 const d = params.get('d') || '';
-const i = params.get('i');
-const t = params.get('t');
+const i = params.get('i');   // dish image URL
+const m = params.get('m');   // .mind file URL — pre-compiled!
 
-if (!n || !i || !t) {
-  showError('📵', 'QR Code Invalid', 'Yeh QR scan sahi nahi hua ya link purana ho gaya. Restaurant staff se naya QR maango.');
+if (!n || !i || !m) {
+  showError('📵', 'QR Invalid', 'Yeh QR sahi nahi hai ya purana ho gaya. Naya QR admin panel se generate karo.');
 } else {
   dish = { name: n, price: p, desc: d, imgURL: i };
-  targetImgURL = t;
+  mindURL = m;
 
   document.getElementById('ui-name').textContent = dish.name;
   document.getElementById('ui-price').textContent = dish.price + (d ? ' • ' + d : '');
 
   step('s1', 'done');
-  setProgress(20);
+  setMsg(dish.name + ' load ho raha hai...');
   startFlow();
 }
 
 async function startFlow() {
   // ── STEP 2: CAMERA ──
   step('s2', 'active');
-  setMsg('Camera permission check ho rahi hai...');
-
+  setMsg('Camera permission check...');
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: 'environment' } }
-    });
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } } });
     stream.getTracks().forEach(tr => tr.stop());
     step('s2', 'done');
-    setProgress(40);
   } catch(e) {
     step('s2', 'error');
-    showError('📷', 'Camera Permission Deny', 'Browser settings mein camera allow karo phir reload karo.\n\nChrome mein: Address bar ke paas lock icon → Camera → Allow');
+    showError('📷', 'Camera Permission Denied', 'Browser mein camera allow karo:\nChrome → Address bar → Lock icon → Camera → Allow\nPhir page reload karo.');
     return;
   }
 
-  // ── STEP 3: COMPILE TARGET IMAGE → .mind ──
+  // ── STEP 3: START AR ──
+  // .mind file pehle se compiled hai GitHub pe — seedha load hoti hai!
   step('s3', 'active');
-  setMsg('Target image compile ho rahi hai... (15-30 sec)');
-
-  try {
-    const mindData = await compileTargetImage(targetImgURL);
-    step('s3', 'done');
-    setProgress(75);
-
-    // ── STEP 4: START AR ──
-    step('s4', 'active');
-    setMsg('AR engine start ho raha hai...');
-    setProgress(90);
-    await startAR(mindData);
-
-  } catch(e) {
-    step('s3', 'error');
-    console.error('Compile error:', e);
-    showError('⚠️', 'Target Compile Failed', 'Logo image process nahi hua. Admin panel mein logo dobara upload karo — clear, high-contrast image use karo.');
-  }
+  setMsg('AR engine start ho raha hai...');
+  buildScene();
 }
 
-// ── COMPILE TARGET IMAGE TO .mind FORMAT ──
-async function compileTargetImage(imgURL) {
-  // Dynamically load MindAR compiler
-  await loadScript('https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js');
-
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = async () => {
-      try {
-        // Draw image to canvas
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        canvas.getContext('2d').drawImage(img, 0, 0);
-
-        const compiler = new MINDAR.IMAGE.Compiler();
-        await compiler.compileImageTargets([canvas], (progress) => {
-          const pct = 40 + Math.round(progress * 35);
-          setProgress(pct);
-          setMsg(`Target compile: ${Math.round(progress * 100)}%`);
-        });
-
-        const exportedBuffer = await compiler.exportData();
-        const blob = new Blob([exportedBuffer]);
-        const mindURL = URL.createObjectURL(blob);
-        resolve(mindURL);
-      } catch(e) {
-        reject(e);
-      }
-    };
-    img.onerror = () => reject(new Error('Image load failed: ' + imgURL));
-    // Add cache-busting for GitHub raw URLs
-    img.src = imgURL + (imgURL.includes('?') ? '&' : '?') + 't=' + Date.now();
-  });
-}
-
-// ── LOAD SCRIPT DYNAMICALLY ──
-function loadScript(src) {
-  return new Promise((resolve, reject) => {
-    if (window.MINDAR) { resolve(); return; }
-    const s = document.createElement('script');
-    s.src = src;
-    s.onload = resolve;
-    s.onerror = reject;
-    document.head.appendChild(s);
-  });
-}
-
-// ── START AR WITH COMPILED .mind FILE ──
-async function startAR(mindURL) {
-  // Load A-Frame + MindAR A-Frame adapter
-  await loadScript('https://aframe.io/releases/1.4.2/aframe.min.js');
-  await loadScript('https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js');
-
+function buildScene() {
   const wrap = document.getElementById('ar-wrap');
   wrap.style.display = 'block';
   wrap.innerHTML = `
@@ -289,7 +212,7 @@ async function startAR(mindURL) {
       device-orientation-permission-ui="enabled: false"
       style="position:fixed;inset:0;width:100%;height:100%;">
 
-      <a-assets>
+      <a-assets timeout="10000">
         <img id="dish-tex" src="${dish.imgURL}" crossorigin="anonymous">
       </a-assets>
 
@@ -297,7 +220,7 @@ async function startAR(mindURL) {
 
       <a-entity mindar-image-target="targetIndex: 0">
 
-        <!-- Shadow -->
+        <!-- Shadow on surface -->
         <a-ellipse
           position="0 0.01 0"
           semi-minor-axis="0.38" semi-major-axis="0.44"
@@ -305,7 +228,7 @@ async function startAR(mindURL) {
           color="#000000" opacity="0.25">
         </a-ellipse>
 
-        <!-- Glow ring -->
+        <!-- Gold glow ring -->
         <a-torus
           position="0 0.02 0"
           radius="0.3" radius-tubular="0.012"
@@ -314,7 +237,7 @@ async function startAR(mindURL) {
           animation="property:scale; from:1 1 1; to:1.12 1.12 1.12; dur:1800; dir:alternate; loop:true; easing:easeInOutSine;">
         </a-torus>
 
-        <!-- Floating dish image -->
+        <!-- Floating dish image above target -->
         <a-image
           id="ar-dish"
           src="#dish-tex"
@@ -330,8 +253,7 @@ async function startAR(mindURL) {
   const scene = document.getElementById('ar-scene');
 
   scene.addEventListener('arReady', () => {
-    step('s4', 'done');
-    setProgress(100);
+    step('s3', 'done');
     setTimeout(() => {
       document.getElementById('loading').style.display = 'none';
       document.getElementById('topbar').style.display = 'flex';
@@ -342,7 +264,7 @@ async function startAR(mindURL) {
 
   scene.addEventListener('arError', (e) => {
     console.error('AR Error:', e);
-    showError('⚠️', 'AR Start Nahi Hua', 'Chrome browser use karo aur HTTPS pe check karo: ' + window.location.href);
+    showError('⚠️', 'AR Start Nahi Hua', 'Chrome browser use karo. Agar problem aaye to admin panel mein logo dobara upload karo.');
   });
 
   scene.addEventListener('targetFound', () => {
@@ -358,13 +280,11 @@ async function startAR(mindURL) {
   });
 }
 
-// ── ROTATE ──
 function rotateDish(val) {
   const el = document.getElementById('ar-dish');
   if (el) el.setAttribute('rotation', `0 ${val} 0`);
 }
 
-// ── ACTIONS ──
 function takePhoto() {
   const canvas = document.querySelector('canvas');
   if (canvas) {
@@ -380,16 +300,13 @@ function takePhoto() {
   toast('📸 Power + Volume Down se screenshot lo');
 }
 
-function orderNow() {
-  toast('🛒 ' + dish.name + ' order mein add ho gaya!');
-}
+function orderNow() { toast('🛒 ' + dish.name + ' order mein add ho gaya!'); }
 
 function sharePage() {
   if (navigator.share) {
     navigator.share({ title: dish.name, url: window.location.href }).catch(() => {});
   } else {
-    navigator.clipboard?.writeText(window.location.href)
-      .then(() => toast('🔗 Link copy ho gaya!'));
+    navigator.clipboard?.writeText(window.location.href).then(() => toast('🔗 Link copy ho gaya!'));
   }
 }
 
